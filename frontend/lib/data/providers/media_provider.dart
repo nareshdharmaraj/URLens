@@ -71,36 +71,37 @@ class MediaProvider with ChangeNotifier {
   /// Parse error message to show user-friendly text
   String _parseErrorMessage(String error) {
     final errorLower = error.toLowerCase();
-    
+
     // YouTube bot detection
-    if (errorLower.contains('sign in') || 
-        errorLower.contains('bot') || 
+    if (errorLower.contains('sign in') ||
+        errorLower.contains('bot') ||
         errorLower.contains('cookies')) {
       return 'YouTube requires authentication. Please make sure you are signed into YouTube in your Chrome, Firefox, or Edge browser, then restart the backend server.';
     }
-    
+
     // Private/unavailable content
-    if (errorLower.contains('private') || errorLower.contains('not available')) {
+    if (errorLower.contains('private') ||
+        errorLower.contains('not available')) {
       return 'This content is private or unavailable. Please check the URL and try again.';
     }
-    
+
     // Geo-restricted
     if (errorLower.contains('geo') || errorLower.contains('restricted')) {
       return 'This content is not available in your region.';
     }
-    
+
     // Network errors
-    if (errorLower.contains('network') || 
-        errorLower.contains('connection') || 
+    if (errorLower.contains('network') ||
+        errorLower.contains('connection') ||
         errorLower.contains('timeout')) {
       return 'Network error. Please check your internet connection and try again.';
     }
-    
+
     // Unsupported platform
     if (errorLower.contains('unsupported')) {
       return 'This platform is not supported. Please try a different URL.';
     }
-    
+
     // Generic error - clean up the message
     String cleanError = error
         .replaceAll('Exception:', '')
@@ -108,13 +109,15 @@ class MediaProvider with ChangeNotifier {
         .replaceAll('Failed to get download options:', '')
         .replaceAll('Error processing URL:', '')
         .trim();
-    
+
     // If error is too long, show first part
     if (cleanError.length > 200) {
       cleanError = cleanError.substring(0, 200) + '...';
     }
-    
-    return cleanError.isNotEmpty ? cleanError : 'An unexpected error occurred. Please try again.';
+
+    return cleanError.isNotEmpty
+        ? cleanError
+        : 'An unexpected error occurred. Please try again.';
   }
 
   /// Clear current state

@@ -17,9 +17,6 @@ class YTDLPService:
 
     def __init__(self):
         """Initialize yt-dlp options"""
-        # Try to use browser cookies for YouTube authentication
-        browser_cookies = self._get_browser_cookies()
-
         self.base_options = {
             "quiet": not settings.DEBUG,
             "no_warnings": not settings.DEBUG,
@@ -27,10 +24,6 @@ class YTDLPService:
             "no_check_certificate": False,
             "prefer_insecure": False,
         }
-
-        # Add cookies if available
-        if browser_cookies:
-            self.base_options["cookiesfrombrowser"] = browser_cookies
 
     def _get_browser_cookies(self):
         """Try to get cookies from available browsers"""
@@ -52,7 +45,7 @@ class YTDLPService:
                 continue
 
         logger.warning(
-            "No browser cookies available, proceeding without authentication"
+            "No browser cookies available for retry"
         )
         return None
 
@@ -98,10 +91,30 @@ class YTDLPService:
                 logger.error(f"Geo-restricted content: {url}")
                 raise PrivateContentException("Content is geographically restricted")
             elif "sign in" in error_msg or "bot" in error_msg or "cookies" in error_msg:
-                logger.error(f"YouTube bot detection: {url}")
-                raise ExtractionException(
-                    "YouTube detected bot-like behavior. Please make sure Chrome browser is installed and you're logged into YouTube in Chrome."
-                )
+                # YouTube bot detection - try again with browser cookies
+                logger.warning(f"YouTube bot detection, retrying with browser cookies: {url}")
+                browser_cookies = self._get_browser_cookies()
+                
+                if browser_cookies:
+                    try:
+                        options_with_cookies = {
+                            **self.base_options,
+                            "skip_download": not download,
+                            "cookiesfrombrowser": browser_cookies,
+                        }
+                        with yt_dlp.YoutubeDL(options_with_cookies) as ydl:  # type: ignore
+                            logger.info(f"Retrying with browser cookies: {url}")
+                            info = ydl.extract_info(url, download=download)
+                            return info  # type: ignore
+                    except Exception as retry_error:
+                        logger.error(f"Retry with cookies failed: {retry_error}")
+                        raise ExtractionException(
+                            "YouTube requires authentication. Please make sure you are signed into YouTube in your Chrome, Firefox, or Edge browser, then restart the backend server."
+                        )
+                else:
+                    raise ExtractionException(
+                        "YouTube requires authentication. Please make sure you are signed into YouTube in your Chrome, Firefox, or Edge browser, then restart the backend server."
+                    )
             else:
                 logger.error(f"Download error: {e}")
                 raise ExtractionException(str(e))
