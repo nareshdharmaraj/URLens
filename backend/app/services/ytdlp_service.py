@@ -23,6 +23,18 @@ class YTDLPService:
             "socket_timeout": settings.TIMEOUT,
             "no_check_certificate": False,
             "prefer_insecure": False,
+            # Better headers to avoid bot detection
+            "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "referer": "https://www.youtube.com/",
+            # Extract more formats
+            "format": "best",
+            # YouTube specific options
+            "extractor_args": {
+                "youtube": {
+                    "player_client": ["android", "web"],
+                    "player_skip": ["configs"],
+                }
+            },
         }
 
     def _get_browser_cookies(self):
@@ -44,9 +56,7 @@ class YTDLPService:
             except Exception:
                 continue
 
-        logger.warning(
-            "No browser cookies available for retry"
-        )
+        logger.warning("No browser cookies available for retry")
         return None
 
     def extract_info(self, url: str, download: bool = False) -> Dict[str, Any]:
@@ -92,9 +102,11 @@ class YTDLPService:
                 raise PrivateContentException("Content is geographically restricted")
             elif "sign in" in error_msg or "bot" in error_msg or "cookies" in error_msg:
                 # YouTube bot detection - try again with browser cookies
-                logger.warning(f"YouTube bot detection, retrying with browser cookies: {url}")
+                logger.warning(
+                    f"YouTube bot detection, retrying with browser cookies: {url}"
+                )
                 browser_cookies = self._get_browser_cookies()
-                
+
                 if browser_cookies:
                     try:
                         options_with_cookies = {
