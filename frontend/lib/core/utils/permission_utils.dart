@@ -1,4 +1,5 @@
 import 'package:permission_handler/permission_handler.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'dart:io';
 
 /// Permission utility functions
@@ -49,9 +50,14 @@ class PermissionUtils {
   /// Check if running on Android 13 or higher
   static Future<bool> _isAndroid13OrHigher() async {
     if (Platform.isAndroid) {
-      // This is a simplified check. In production, you'd want to
-      // use a package like device_info_plus to get the exact Android version
-      return true; // Assume modern Android for now
+      try {
+        // Use device_info_plus to get actual Android version
+        final deviceInfo = await DeviceInfoPlugin().androidInfo;
+        return deviceInfo.version.sdkInt >= 33; // Android 13 is API 33
+      } catch (e) {
+        // Fallback: assume modern Android
+        return true;
+      }
     }
     return false;
   }

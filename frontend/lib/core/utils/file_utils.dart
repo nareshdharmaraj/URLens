@@ -7,8 +7,27 @@ import '../constants/storage_constants.dart';
 class FileUtils {
   /// Get downloads directory based on platform
   static Future<Directory> getDownloadsDirectory() async {
-    if (Platform.isAndroid || Platform.isIOS) {
-      // Mobile: use app's documents directory
+    if (Platform.isAndroid) {
+      // Android: use external storage directory for gallery visibility
+      // This ensures files appear in the device gallery
+      final directory = await getExternalStorageDirectory();
+      if (directory == null) {
+        throw Exception('Cannot access external storage');
+      }
+
+      // Use Android/data/com.yourapp/files/URLens folder
+      // Files saved here can be accessed by gallery apps when using gallery_saver
+      final downloadsDir = Directory(
+        path.join(directory.path, StorageConstants.appFolderName),
+      );
+
+      if (!await downloadsDir.exists()) {
+        await downloadsDir.create(recursive: true);
+      }
+
+      return downloadsDir;
+    } else if (Platform.isIOS) {
+      // iOS: use documents directory
       final directory = await getApplicationDocumentsDirectory();
       final downloadsDir = Directory(
         path.join(directory.path, StorageConstants.appFolderName),

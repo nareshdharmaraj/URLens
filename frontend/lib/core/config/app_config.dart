@@ -1,4 +1,5 @@
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../constants/api_constants.dart';
 import 'db_init/db_init.dart';
 
@@ -11,9 +12,13 @@ class AppConfig {
     // Initialize database (Platform specific)
     initializeDatabase();
 
-    // Set API base URL from environment
-    ApiConstants.baseUrl =
-        dotenv.env['API_BASE_URL'] ?? 'http://localhost:8000';
+    // Load backend URL preference from settings
+    final prefs = await SharedPreferences.getInstance();
+    final useLocal = prefs.getBool('use_local_backend') ?? true;
+
+    ApiConstants.baseUrl = useLocal
+        ? 'http://localhost:8000'
+        : 'https://urlens.onrender.com';
   }
 
   static bool get isProduction => !ApiConstants.baseUrl.contains('localhost');

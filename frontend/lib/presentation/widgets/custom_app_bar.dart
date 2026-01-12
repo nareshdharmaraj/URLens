@@ -23,10 +23,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
           decoration: BoxDecoration(
             color: AppColors.surface.withAlpha(150), // Semi-transparent
             border: Border(
-              bottom: BorderSide(
-                color: Colors.white.withAlpha(20),
-                width: 1,
-              ),
+              bottom: BorderSide(color: Colors.white.withAlpha(20), width: 1),
             ),
           ),
           child: AppBar(
@@ -39,17 +36,14 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
             centerTitle: false,
             title: Row(
               children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [AppColors.primary, AppColors.secondary],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(12),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.asset(
+                    'assets/images/logo.png',
+                    width: 36,
+                    height: 36,
+                    fit: BoxFit.cover,
                   ),
-                  child: const Icon(Icons.lens, color: Colors.white, size: 20),
                 ),
                 const SizedBox(width: 12),
                 Text(

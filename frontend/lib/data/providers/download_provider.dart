@@ -93,20 +93,21 @@ class DownloadProvider with ChangeNotifier {
       final filePath = await _repository.downloadFile(
         url: option.downloadUrl,
         fileName: fileName,
+        originalUrl: url, // Pass original URL for merged formats
         onProgress: (received, total) {
           if (total > 0) {
             task.progress = received / total;
             notifyListeners();
-            
+
             // Update notification every 5%
             if ((task.progress * 100).toInt() % 5 == 0) {
-                 NotificationService().showProgressNotification(
-                  id: notificationId,
-                  title: 'Downloading $fileName',
-                  body: '${(task.progress * 100).toInt()}%',
-                  progress: (task.progress * 100).toInt(),
-                  maxProgress: 100,
-                );
+              NotificationService().showProgressNotification(
+                id: notificationId,
+                title: 'Downloading $fileName',
+                body: '${(task.progress * 100).toInt()}%',
+                progress: (task.progress * 100).toInt(),
+                maxProgress: 100,
+              );
             }
           }
         },
@@ -171,13 +172,12 @@ class DownloadProvider with ChangeNotifier {
         _activeTasks.remove(taskId);
         notifyListeners();
       });
-
     } catch (e) {
       debugPrint('Download Error: $e');
       task.status = 'failed';
       task.error = _getFriendlyErrorMessage(e);
       notifyListeners();
-      
+
       // Show failure notification with detailed error
       await NotificationService().showNotification(
         id: notificationId,
@@ -211,10 +211,10 @@ class DownloadProvider with ChangeNotifier {
       }
       return 'File system error. Please check storage permissions.';
     }
-    
-    return error.toString().length > 50 
-      ? 'An unexpected error occurred.' 
-      : error.toString();
+
+    return error.toString().length > 50
+        ? 'An unexpected error occurred.'
+        : error.toString();
   }
 
   /// Cancel download
@@ -224,10 +224,10 @@ class DownloadProvider with ChangeNotifier {
       task.cancelToken?.cancel('Download cancelled by user');
       task.status = 'cancelled';
       _activeTasks.remove(taskId);
-      
+
       // Cancel notification
       NotificationService().cancelNotification(taskId.hashCode);
-      
+
       notifyListeners();
     }
   }

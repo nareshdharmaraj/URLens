@@ -1,8 +1,9 @@
 import 'dart:io';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
 import 'package:dio/dio.dart';
 import 'package:path/path.dart' as path;
 import 'package:universal_html/html.dart' as html;
+import 'package:image_gallery_saver/image_gallery_saver.dart';
 import '../../../core/utils/file_utils.dart';
 import '../../../core/constants/api_constants.dart';
 
@@ -16,18 +17,30 @@ class FileManager {
   Future<String> downloadFile({
     required String url,
     required String fileName,
+    String? originalUrl, // Add original URL for merged formats
     required Function(int received, int total) onProgress,
     CancelToken? cancelToken,
   }) async {
     try {
-      // Use backend proxy endpoint to avoid CORS issues
-      final String proxyUrl = ApiConstants.proxyDownloadEndpoint;
+      // Check if this is a merged format
+      final isMergedFormat = url.startsWith('MERGE:');
+      final String proxyUrl = isMergedFormat
+          ? '${ApiConstants.baseUrl}/api/${ApiConstants.apiVersion}/download-merged'
+          : ApiConstants.proxyDownloadEndpoint;
 
       if (kIsWeb) {
         // Web download logic using proxy
+        final queryParams = isMergedFormat
+            ? {
+                'original_url': originalUrl ?? url,
+                'format_id': url.replaceFirst('MERGE:', ''),
+                'filename': fileName,
+              }
+            : {'url': url, 'filename': fileName};
+
         final response = await _dio.get(
           proxyUrl,
-          queryParameters: {'url': url, 'filename': fileName},
+          queryParameters: queryParams,
           options: Options(
             responseType: ResponseType.bytes,
             followRedirects: true,
@@ -57,11 +70,19 @@ class FileManager {
           filePath = path.join(downloadsDir.path, finalFileName);
         }
 
-        // Download file using backend proxy
+        // Download file using backend proxy or merged download
+        final queryParams = isMergedFormat
+            ? {
+                'original_url': originalUrl ?? url,
+                'format_id': url.replaceFirst('MERGE:', ''),
+                'filename': fileName,
+              }
+            : {'url': url, 'filename': fileName};
+
         await _dio.download(
           proxyUrl,
           filePath,
-          queryParameters: {'url': url, 'filename': fileName},
+          queryParameters: queryParams,
           onReceiveProgress: onProgress,
           cancelToken: cancelToken,
           options: Options(
@@ -73,6 +94,52 @@ class FileManager {
             },
           ),
         );
+
+        // Save to device gallery for mobile platforms
+        if (Platform.isAndroid || Platform.isIOS) {
+          try {
+            final ext = path.extension(fileName).toLowerCase();
+
+            // Read file as bytes
+            final bytes = await File(filePath).readAsBytes();
+
+            // Check file type and save to appropriate gallery
+            if ([
+              '.mp4',
+              '.mov',
+              '.avi',
+              '.mkv',
+              '.webm',
+              '.flv',
+              '.wmv',
+            ].contains(ext)) {
+              // Save video to gallery
+              final result = await ImageGallerySaver.saveFile(
+                filePath,
+                name: path.basenameWithoutExtension(fileName),
+                isReturnPathOfIOS: true,
+              );
+              debugPrint('✓ Video saved to gallery: $result');
+            } else if ([
+              '.jpg',
+              '.jpeg',
+              '.png',
+              '.gif',
+              '.webp',
+              '.bmp',
+            ].contains(ext)) {
+              // Save image to gallery
+              final result = await ImageGallerySaver.saveImage(
+                bytes,
+                name: path.basenameWithoutExtension(fileName),
+              );
+              debugPrint('✓ Image saved to gallery: $result');
+            }
+          } catch (e) {
+            // Don't fail the download if gallery save fails
+            debugPrint('Gallery save error (file still downloaded): $e');
+          }
+        }
 
         return filePath;
       }

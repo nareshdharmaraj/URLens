@@ -112,7 +112,7 @@ class MediaProvider with ChangeNotifier {
 
     // If error is too long, show first part
     if (cleanError.length > 200) {
-      cleanError = cleanError.substring(0, 200) + '...';
+      cleanError = '${cleanError.substring(0, 200)}...';
     }
 
     return cleanError.isNotEmpty

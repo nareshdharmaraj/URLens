@@ -17,12 +17,14 @@ class DownloadRepository {
   Future<String> downloadFile({
     required String url,
     required String fileName,
+    String? originalUrl,
     required Function(int received, int total) onProgress,
     CancelToken? cancelToken,
   }) async {
     return await _fileManager.downloadFile(
       url: url,
       fileName: fileName,
+      originalUrl: originalUrl,
       onProgress: onProgress,
       cancelToken: cancelToken,
     );

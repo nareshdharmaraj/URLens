@@ -50,8 +50,10 @@ dependencies:
   
   # File Management & Permissions
   permission_handler: ^11.2.0
-  file_picker: ^6.1.1
+  file_picker: ^8.1.6
   open_file: ^3.3.2
+  image_gallery_saver: ^2.0.3
+  device_info_plus: ^10.1.0
   
   # Media Players
   video_player: ^2.8.2
@@ -89,6 +91,7 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.13.1
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -137,3 +140,8 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "../logo.png"

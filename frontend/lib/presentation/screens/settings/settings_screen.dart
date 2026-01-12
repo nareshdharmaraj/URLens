@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../widgets/main_layout.dart';
@@ -26,7 +27,7 @@ class SettingsScreen extends StatelessWidget {
                       subtitle: const Text('Receive download updates'),
                       value: settings.notificationsEnabled,
                       onChanged: (value) {
-                         settings.toggleNotifications(value);
+                        settings.toggleNotifications(value);
                       },
                       secondary: Container(
                         padding: const EdgeInsets.all(8),
@@ -34,7 +35,10 @@ class SettingsScreen extends StatelessWidget {
                           color: AppColors.primary.withAlpha(25),
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: const Icon(Icons.notifications, color: AppColors.primary),
+                        child: const Icon(
+                          Icons.notifications,
+                          color: AppColors.primary,
+                        ),
                       ),
                     ),
                     const Divider(),
@@ -43,7 +47,9 @@ class SettingsScreen extends StatelessWidget {
                       subtitle: const Text('Use dark theme'),
                       value: settings.themeMode == ThemeMode.dark,
                       onChanged: (value) {
-                        settings.setThemeMode(value ? ThemeMode.dark : ThemeMode.light);
+                        settings.setThemeMode(
+                          value ? ThemeMode.dark : ThemeMode.light,
+                        );
                       },
                       secondary: Container(
                         padding: const EdgeInsets.all(8),
@@ -51,7 +57,10 @@ class SettingsScreen extends StatelessWidget {
                           color: AppColors.secondary.withAlpha(25),
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: const Icon(Icons.dark_mode, color: AppColors.secondary),
+                        child: const Icon(
+                          Icons.dark_mode,
+                          color: AppColors.secondary,
+                        ),
                       ),
                     ),
                   ],
@@ -59,7 +68,77 @@ class SettingsScreen extends StatelessWidget {
               );
             },
           ),
-          
+
+          // Developer Options (Debug Mode Only)
+          if (kDebugMode) ...[
+            const SizedBox(height: 24),
+            _buildSectionHeader('Developer Options'),
+            Consumer<SettingsProvider>(
+              builder: (context, settings, child) {
+                return Card(
+                  child: Column(
+                    children: [
+                      SwitchListTile(
+                        title: const Text('Use Local Backend'),
+                        subtitle: Text(
+                          settings.useLocalBackend
+                              ? 'localhost:8000'
+                              : 'urlens.onrender.com',
+                          style: TextStyle(
+                            color: settings.useLocalBackend
+                                ? Colors.green
+                                : Colors.orange,
+                            fontSize: 12,
+                          ),
+                        ),
+                        value: settings.useLocalBackend,
+                        onChanged: (value) async {
+                          await settings.toggleBackend(value);
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  'Backend switched to ${value ? "Local" : "Cloud"}. Restart recommended.',
+                                ),
+                                duration: const Duration(seconds: 3),
+                              ),
+                            );
+                          }
+                        },
+                        secondary: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.blue.withAlpha(25),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Icon(
+                            Icons.developer_mode,
+                            color: Colors.blue,
+                          ),
+                        ),
+                      ),
+                      const Divider(),
+                      ListTile(
+                        leading: const Icon(Icons.info_outline, size: 20),
+                        title: const Text(
+                          'Current Backend',
+                          style: TextStyle(fontSize: 14),
+                        ),
+                        subtitle: Text(
+                          settings.getBackendUrl(),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontFamily: 'monospace',
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ],
+
           const SizedBox(height: 24),
           _buildSectionHeader('About'),
           Card(
@@ -71,7 +150,7 @@ class SettingsScreen extends StatelessWidget {
                   trailing: const Text('1.0.0'),
                 ),
                 const Divider(),
-                 ListTile(
+                ListTile(
                   leading: const Icon(Icons.privacy_tip_outlined),
                   title: const Text('Privacy Policy'),
                   trailing: const Icon(Icons.arrow_forward_ios, size: 16),
