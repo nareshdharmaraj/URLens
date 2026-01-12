@@ -1,0 +1,58 @@
+{
+  "folders": [
+    {
+      "name": "URLens Root",
+      "path": "."
+    },
+    {
+      "name": "Frontend (Flutter)",
+      "path": "frontend"
+    },
+    {
+      "name": "Backend (Python)",
+      "path": "backend"
+    }
+  ],
+  "settings": {
+    "python.defaultInterpreterPath": "${workspaceFolder:Backend (Python)}/venv/Scripts/python.exe",
+    "python.analysis.extraPaths": [
+      "${workspaceFolder:Backend (Python)}"
+    ],
+    "[python]": {
+      "editor.defaultFormatter": "ms-python.black-formatter",
+      "editor.formatOnSave": true,
+      "editor.codeActionsOnSave": {
+        "source.organizeImports": "explicit"
+      }
+    },
+    "python.analysis.typeCheckingMode": "basic",
+    "dart.analysisExcludedFolders": [
+      "${workspaceFolder:URLens Root}/backend",
+      "${workspaceFolder:URLens Root}/.dart_tool",
+      "${workspaceFolder:URLens Root}/build"
+    ],
+    "files.exclude": {
+      "**/.git": true,
+      "**/.dart_tool": true,
+      "**/.idea": true,
+      "**/build": true
+    },
+    "search.exclude": {
+      "**/node_modules": true,
+      "**/bower_components": true,
+      "**/.dart_tool": true,
+      "**/build": true,
+      "**/venv": true,
+      "**/__pycache__": true
+    }
+  },
+  "extensions": {
+    "recommendations": [
+      "dart-code.flutter",
+      "dart-code.dart-code",
+      "ms-python.python",
+      "ms-python.vscode-pylance",
+      "ms-python.black-formatter"
+    ]
+  }
+}
