@@ -25,5 +25,6 @@
     "**/.dart_tool": true,
     "**/.idea": true,
     "**/build": true
-  }
+  },
+  "java.configuration.updateBuildConfiguration": "interactive"
 }

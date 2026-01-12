@@ -8,6 +8,11 @@ flutter clean
 flutter pub get
 
 # 2. Build for Windows
+Write-Host "Cleaning project..."
+flutter clean
+Write-Host "Getting dependencies..."
+flutter pub get
+
 Write-Host "Building for Windows..."
 flutter build windows --release
 if ($LASTEXITCODE -eq 0) {

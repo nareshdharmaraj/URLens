@@ -44,6 +44,7 @@ dependencies:
   
   # Local Database
   sqflite: ^2.3.2
+  sqflite_common_ffi: ^2.3.3
   path: ^1.8.3
   path_provider: ^2.1.2
   
@@ -75,10 +76,8 @@ dependencies:
   shared_preferences: ^2.2.2
   
   # Network
-  # Network
   internet_connection_checker_plus: ^2.0.0
   universal_html: ^2.2.4
-  sqflite_common_ffi: ^2.3.7+1
 
 dev_dependencies:
   flutter_test:

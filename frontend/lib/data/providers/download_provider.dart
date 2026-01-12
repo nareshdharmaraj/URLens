@@ -113,10 +113,12 @@ class DownloadProvider with ChangeNotifier {
         cancelToken: cancelToken,
       );
 
-      // Verify file exists
-      final file = File(filePath);
-      if (!await file.exists()) {
-        throw Exception('Download finished but file not found at $filePath');
+      // Verify file exists (Mobile/Desktop only)
+      if (!kIsWeb) {
+        final file = File(filePath);
+        if (!await file.exists()) {
+          throw Exception('Download finished but file not found at $filePath');
+        }
       }
 
       // Update task success state immediately so UI reflects it
@@ -136,6 +138,7 @@ class DownloadProvider with ChangeNotifier {
       int fileSize = option.fileSizeApprox ?? 0;
       if (!kIsWeb) {
         try {
+          final file = File(filePath);
           fileSize = await file.length();
         } catch (e) {
           debugPrint('Warning: Could not get file size: $e');

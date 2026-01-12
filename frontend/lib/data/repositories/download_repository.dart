@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 import '../data_sources/local/database_helper.dart';
 import '../data_sources/local/file_manager.dart';
@@ -29,31 +30,37 @@ class DownloadRepository {
 
   /// Save download record to database
   Future<int> saveDownloadRecord(DownloadRecord record) async {
+    if (kIsWeb) return 0;
     return await _databaseHelper.insertDownload(record);
   }
 
   /// Get all downloads
   Future<List<DownloadRecord>> getAllDownloads() async {
+    if (kIsWeb) return [];
     return await _databaseHelper.getAllDownloads();
   }
 
   /// Get download by ID
   Future<DownloadRecord?> getDownloadById(int id) async {
+    if (kIsWeb) return null;
     return await _databaseHelper.getDownloadById(id);
   }
 
   /// Search downloads
   Future<List<DownloadRecord>> searchDownloads(String query) async {
+    if (kIsWeb) return [];
     return await _databaseHelper.searchDownloads(query);
   }
 
   /// Filter downloads by platform
   Future<List<DownloadRecord>> getDownloadsByPlatform(String platform) async {
+    if (kIsWeb) return [];
     return await _databaseHelper.getDownloadsByPlatform(platform);
   }
 
   /// Delete download (file + record)
   Future<bool> deleteDownload(int id) async {
+    if (kIsWeb) return false;
     final record = await _databaseHelper.getDownloadById(id);
 
     if (record != null) {
@@ -71,6 +78,7 @@ class DownloadRepository {
 
   /// Clear all downloads
   Future<void> clearAllDownloads() async {
+    if (kIsWeb) return;
     final downloads = await _databaseHelper.getAllDownloads();
 
     // Delete all files
@@ -84,6 +92,7 @@ class DownloadRepository {
 
   /// Get download count
   Future<int> getDownloadCount() async {
+    if (kIsWeb) return 0;
     return await _databaseHelper.getDownloadCount();
   }
 }
