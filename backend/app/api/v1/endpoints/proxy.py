@@ -8,6 +8,41 @@ from app.core.logger import logger
 router = APIRouter()
 
 
+@router.get("/proxy", tags=["media"])
+async def proxy_content(
+    url: str = Query(..., description="The URL to proxy"),
+):
+    """
+    Generic proxy endpoint for images/content
+    """
+    # Use distinct client for this simple proxy
+    client = httpx.AsyncClient(timeout=30.0, follow_redirects=True)
+    try:
+        req = client.build_request("GET", url)
+        response = await client.send(req, stream=True)
+
+        if response.status_code != 200:
+            await response.aclose()
+            await client.aclose()
+            raise HTTPException(status_code=response.status_code)
+
+        content_type = response.headers.get("content-type", "application/octet-stream")
+        
+        async def cleanup():
+            await response.aclose()
+            await client.aclose()
+
+        return StreamingResponse(
+            response.aiter_bytes(chunk_size=8192),
+            media_type=content_type,
+            background=cleanup,
+        )
+    except Exception as e:
+        await client.aclose()
+        logger.error(f"Proxy failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.get("/proxy-download", tags=["media"])
 async def proxy_download(
     url: str = Query(..., description="The URL to download from"),

@@ -42,6 +42,7 @@ class HistoryListItem extends StatelessWidget {
     
     if (FileUtils.isAudio(filePath)) {
        // Audio player not implemented yet, fall back to system
+       // Fall through to OpenFile below
     }
 
     if (FileUtils.isImage(filePath)) {

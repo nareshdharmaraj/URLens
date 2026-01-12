@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 
+import '../screens/home/home_screen.dart';
 import '../screens/history/history_screen.dart';
 import '../screens/settings/settings_screen.dart';
 import '../screens/privacy/privacy_screen.dart';
@@ -74,12 +75,15 @@ class SideMenu extends StatelessWidget {
                     icon: Icons.home_rounded, 
                     isActive: true,
                     onTap: () {
-                       // Typically we just close drawer if on mobile or do nothing if already on home
-                       // For simplicity, we just pop if it's a drawer
+                       // Navigate to Home
                        if (Scaffold.maybeOf(context)?.hasDrawer ?? false) {
                          Navigator.pop(context);
                        }
-                    }
+                       Navigator.pushReplacement(
+                         context,
+                         MaterialPageRoute(builder: (_) => const HomeScreen()),
+                       );
+                    },
                   ),
                   _buildMenuItem(
                     context, 
@@ -171,7 +175,8 @@ class SideMenu extends StatelessWidget {
     if (Scaffold.maybeOf(context)?.hasDrawer ?? false) {
       Navigator.pop(context); // Close drawer first
     }
-    Navigator.push(
+    // Use pushReplacement to avoid building a huge stack of switching between sidebar items
+    Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (_) => screen),
     );

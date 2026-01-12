@@ -25,9 +25,18 @@ class _URLInputCardState extends State<URLInputCard> {
   }
 
   Future<void> _pasteFromClipboard() async {
-    final clipboardData = await Clipboard.getData(Clipboard.kTextPlain);
-    if (clipboardData != null && clipboardData.text != null) {
-      _controller.text = clipboardData.text!;
+    try {
+      final clipboardData = await Clipboard.getData(Clipboard.kTextPlain);
+      if (clipboardData != null && clipboardData.text != null) {
+        _controller.text = clipboardData.text!;
+      }
+    } catch (e) {
+      debugPrint('Clipboard error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to access clipboard')),
+        );
+      }
     }
   }
 
@@ -92,62 +101,84 @@ class _URLInputCardState extends State<URLInputCard> {
               const SizedBox(height: 16),
 
               // Action Buttons
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: _pasteFromClipboard,
-                      child: const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.content_paste, size: 18),
-                          SizedBox(width: 6),
-                          Text('Paste'),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    flex: 2,
-                    child: Consumer<MediaProvider>(
-                      builder: (context, provider, child) {
-                        return ElevatedButton(
-                          onPressed: provider.isAnalyzing ? null : _analyze,
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              if (provider.isAnalyzing)
-                                const SizedBox(
-                                  width: 16,
-                                  height: 16,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                      Colors.white,
-                                    ),
-                                  ),
-                                )
-                              else
-                                const Icon(Icons.search, size: 18),
-                              const SizedBox(width: 6),
-                              Text(
-                                provider.isAnalyzing
-                                    ? 'Analyzing...'
-                                    : 'Analyze',
-                              ),
-                            ],
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final isSmall = constraints.maxWidth < 300;
+                    return Flex(
+                      direction: isSmall ? Axis.vertical : Axis.horizontal,
+                      children: [
+                        if (isSmall) ...[
+                          SizedBox(
+                            width: double.infinity,
+                            child: OutlinedButton.icon(
+                              onPressed: _pasteFromClipboard,
+                              icon: const Icon(Icons.content_paste, size: 18),
+                              label: const Text('Paste'),
+                            ),
                           ),
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ),
+                          const SizedBox(height: 12),
+                        ] else ...[
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: _pasteFromClipboard,
+                              icon: const Icon(Icons.content_paste, size: 18),
+                              label: const Text('Paste'),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                        ],
+                        
+                        if (isSmall)
+                          SizedBox(
+                            width: double.infinity,
+                            child: _buildAnalyzeButton(),
+                          )
+                        else
+                          Expanded(
+                            flex: 2,
+                            child: _buildAnalyzeButton(),
+                          ),
+                      ],
+                    );
+                  },
+                ),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildAnalyzeButton() {
+    return Consumer<MediaProvider>(
+      builder: (context, provider, child) {
+        return ElevatedButton(
+          onPressed: provider.isAnalyzing ? null : _analyze,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (provider.isAnalyzing)
+                const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      Colors.white,
+                    ),
+                  ),
+                )
+              else
+                const Icon(Icons.search, size: 18),
+              const SizedBox(width: 6),
+              Text(
+                provider.isAnalyzing ? 'Analyzing...' : 'Analyze',
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

@@ -1,11 +1,15 @@
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../constants/api_constants.dart';
+import 'db_init/db_init.dart';
 
 /// Application configuration
 class AppConfig {
   static Future<void> initialize() async {
     // Load environment variables
     await dotenv.load(fileName: ".env");
+
+    // Initialize database (Platform specific)
+    initializeDatabase();
 
     // Set API base URL from environment
     ApiConstants.baseUrl =

@@ -6,6 +6,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../widgets/loading_indicator.dart';
 import '../../widgets/empty_state.dart';
+import '../../widgets/main_layout.dart';
 import 'widgets/history_list_item.dart';
 
 /// History screen - Shows download history
@@ -115,41 +116,41 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Download History'),
-        actions: [
-          Consumer<HistoryProvider>(
-            builder: (context, provider, child) {
-              if (provider.hasDownloads) {
-                return PopupMenuButton(
-                  icon: const Icon(Icons.more_vert),
-                  itemBuilder: (context) => [
-                    const PopupMenuItem(
-                      value: 'clear',
-                      child: Row(
-                        children: [
-                          Icon(Icons.delete_sweep, color: AppColors.error),
-                          SizedBox(width: 8),
-                          Text('Clear All'),
-                        ],
-                      ),
-                    ),
-                  ],
-                  onSelected: (value) {
-                    if (value == 'clear') {
-                      _showClearAllConfirmation();
-                    }
-                  },
-                );
-              }
-              return const SizedBox.shrink();
-            },
-          ),
-        ],
-      ),
-      body: Column(
+    return MainLayout(
+      title: 'History',
+      child: Column(
         children: [
+          // Header with Clear All
+          Padding(
+            padding: const EdgeInsets.all(AppConstants.padding),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Downloads',
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                Consumer<HistoryProvider>(
+                  builder: (context, provider, child) {
+                    if (provider.hasDownloads) {
+                      return TextButton.icon(
+                        onPressed: _showClearAllConfirmation,
+                        icon: const Icon(Icons.delete_sweep, color: AppColors.error),
+                        label: const Text(
+                          'Clear All',
+                          style: TextStyle(color: AppColors.error),
+                        ),
+                      );
+                    }
+                    return const SizedBox.shrink();
+                  },
+                ),
+              ],
+            ),
+          ),
           // Search Bar
           Padding(
             padding: const EdgeInsets.all(AppConstants.padding),

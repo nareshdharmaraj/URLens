@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 import '../models/download_option.dart';
@@ -11,6 +12,9 @@ class DownloadTask {
   final String url;
   final String fileName;
   final DownloadOption option;
+  final String? title;
+  final String? thumbnailUrl;
+  final String? platform;
   double progress;
   String status; // downloading, completed, failed, cancelled
   String? filePath;
@@ -22,6 +26,9 @@ class DownloadTask {
     required this.url,
     required this.fileName,
     required this.option,
+    this.title,
+    this.thumbnailUrl,
+    this.platform,
     this.progress = 0.0,
     this.status = 'downloading',
     this.filePath,
@@ -63,6 +70,9 @@ class DownloadProvider with ChangeNotifier {
       url: option.downloadUrl,
       fileName: fileName,
       option: option,
+      title: title,
+      thumbnailUrl: thumbnailUrl,
+      platform: platform,
       cancelToken: cancelToken,
     );
 
@@ -116,13 +126,15 @@ class DownloadProvider with ChangeNotifier {
       );
 
       // Get actual file size
-      final fileSize = await _repository
-          .downloadFile(
-            url: option.downloadUrl,
-            fileName: fileName,
-            onProgress: (_, __) {},
-          )
-          .then((_) => option.fileSizeApprox ?? 0);
+      // Get actual file size
+      int fileSize = option.fileSizeApprox ?? 0;
+      if (!kIsWeb && filePath != null) {
+        try {
+          fileSize = await File(filePath).length();
+        } catch (e) {
+          debugPrint('Error getting file size: $e');
+        }
+      }
 
       // Save to database
       await _repository.saveDownloadRecord(
@@ -214,6 +226,9 @@ class DownloadProvider with ChangeNotifier {
         url: task.url,
         fileName: task.fileName,
         option: task.option,
+        title: task.title,
+        thumbnailUrl: task.thumbnailUrl,
+        platform: task.platform,
       );
     }
   }

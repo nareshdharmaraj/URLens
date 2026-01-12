@@ -52,14 +52,34 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                   child: const Icon(Icons.lens, color: Colors.white, size: 20),
                 ),
                 const SizedBox(width: 12),
-                Text(
-                  title,
-                  style: const TextStyle(
+                const Text(
+                  'URLens',
+                  style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 22,
                     letterSpacing: 0.5,
                   ),
                 ),
+                if (title != 'URLens' && title.isNotEmpty) ...[
+                   Container(
+                     margin: const EdgeInsets.symmetric(horizontal: 12),
+                     height: 20,
+                     width: 1,
+                     color: AppColors.textSecondary.withAlpha(50), 
+                   ),
+                   Flexible(
+                     child: Text(
+                       title,
+                       overflow: TextOverflow.ellipsis,
+                       style: const TextStyle(
+                         fontWeight: FontWeight.w500,
+                         fontSize: 18,
+                         letterSpacing: 0.5,
+                         color: AppColors.textSecondary,
+                       ),
+                     ),
+                   ),
+                ],
               ],
             ),
             actions: actions,
