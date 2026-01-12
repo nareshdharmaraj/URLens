@@ -81,17 +81,21 @@ class _ActiveDownloadItem extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 4),
-                      Text(
-                        task.status == 'downloading'
-                            ? '${(task.progress * 100).toInt()}% • ${task.option.qualityLabel}'
-                            : task.status.toUpperCase(),
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: task.status == 'failed'
-                              ? AppColors.error
-                              : AppColors.textSecondary,
+                        Text(
+                          task.status == 'downloading'
+                              ? '${(task.progress * 100).toInt()}% • ${task.option.qualityLabel}'
+                              : (task.status == 'failed' && task.error != null) 
+                                  ? task.error! 
+                                  : task.status.toUpperCase(),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: task.status == 'failed'
+                                ? AppColors.error
+                                : AppColors.textSecondary,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                      ),
                     ],
                   ),
                 ),

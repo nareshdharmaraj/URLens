@@ -85,4 +85,28 @@ class NotificationService {
   Future<void> cancelNotification(int id) async {
     await _notificationsPlugin.cancel(id);
   }
+  Future<void> showNotification({
+    required int id,
+    required String title,
+    required String body,
+    String? payload,
+  }) async {
+    const androidDetails = AndroidNotificationDetails(
+      'status_channel',
+      'Status',
+      channelDescription: 'App status updates',
+      importance: Importance.defaultImportance,
+      priority: Priority.defaultPriority,
+    );
+
+    const details = NotificationDetails(android: androidDetails);
+
+    await _notificationsPlugin.show(
+      id,
+      title,
+      body,
+      details,
+      payload: payload,
+    );
+  }
 }

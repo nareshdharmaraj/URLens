@@ -98,7 +98,7 @@ class DownloadProvider with ChangeNotifier {
             task.progress = received / total;
             notifyListeners();
             
-            // Update notification every 5% to avoid spamming
+            // Update notification every 5%
             if ((task.progress * 100).toInt() % 5 == 0) {
                  NotificationService().showProgressNotification(
                   id: notificationId,
@@ -113,9 +113,16 @@ class DownloadProvider with ChangeNotifier {
         cancelToken: cancelToken,
       );
 
-      // Update task
+      // Verify file exists
+      final file = File(filePath);
+      if (!await file.exists()) {
+        throw Exception('Download finished but file not found at $filePath');
+      }
+
+      // Update task success state immediately so UI reflects it
       task.status = 'completed';
       task.filePath = filePath;
+      notifyListeners();
 
       // Show completion notification
       await NotificationService().showCompletionNotification(
@@ -125,44 +132,55 @@ class DownloadProvider with ChangeNotifier {
         filePath: filePath,
       );
 
-      // Get actual file size
-      // Get actual file size
+      // Get actual file size (safe)
       int fileSize = option.fileSizeApprox ?? 0;
-      if (!kIsWeb && filePath != null) {
+      if (!kIsWeb) {
         try {
-          fileSize = await File(filePath).length();
+          fileSize = await file.length();
         } catch (e) {
-          debugPrint('Error getting file size: $e');
+          debugPrint('Warning: Could not get file size: $e');
         }
       }
 
-      // Save to database
-      await _repository.saveDownloadRecord(
-        DownloadRecord(
-          originalUrl: url,
-          title: title ?? fileName,
-          thumbnailUrl: thumbnailUrl,
-          platform: platform,
-          localFilePath: filePath,
-          fileSize: fileSize,
-          downloadDate: DateTime.now(),
-        ),
-      );
+      // Save to database (Isolated try-catch)
+      try {
+        await _repository.saveDownloadRecord(
+          DownloadRecord(
+            originalUrl: url,
+            title: title ?? fileName,
+            thumbnailUrl: thumbnailUrl,
+            platform: platform,
+            localFilePath: filePath,
+            fileSize: fileSize,
+            downloadDate: DateTime.now(),
+          ),
+        );
+      } catch (dbError) {
+        debugPrint('Database Error: $dbError');
+        // Do NOT fail the download task if DB fails, just log it.
+        // But maybe show a toast?
+      }
 
       notifyListeners();
 
-      // Remove from active tasks after 3 seconds
+      // Remove from active tasks after delay
       Future.delayed(const Duration(seconds: 3), () {
         _activeTasks.remove(taskId);
         notifyListeners();
       });
+
     } catch (e) {
+      debugPrint('Download Error: $e');
       task.status = 'failed';
       task.error = _getFriendlyErrorMessage(e);
       notifyListeners();
       
-      // Cancel notification on failure
-      await NotificationService().cancelNotification(notificationId);
+      // Show failure notification with detailed error
+      await NotificationService().showNotification(
+        id: notificationId,
+        title: 'Download Failed',
+        body: task.error ?? 'Unknown error',
+      );
     }
   }
 

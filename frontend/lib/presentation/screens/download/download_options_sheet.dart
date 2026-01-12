@@ -47,9 +47,14 @@ class DownloadOptionsSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Categorize options
+    final videoOptions = options.where((o) => o.type == 'video_audio' || o.type == null).toList();
+    final audioOptions = options.where((o) => o.type == 'audio' || o.qualityLabel.contains('Audio')).toList();
+    final videoOnlyOptions = options.where((o) => o.type == 'video_only' || o.qualityLabel.contains('Video Only')).toList();
+
     return Container(
       constraints: BoxConstraints(
-        maxHeight: MediaQuery.of(context).size.height * 0.75,
+        maxHeight: MediaQuery.of(context).size.height * 0.85,
       ),
       decoration: const BoxDecoration(
         color: AppColors.surface,
@@ -57,75 +62,106 @@ class DownloadOptionsSheet extends StatelessWidget {
           top: Radius.circular(AppConstants.borderRadius * 2),
         ),
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Handle
-          Container(
-            margin: const EdgeInsets.symmetric(vertical: 12),
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: AppColors.textHint,
-              borderRadius: BorderRadius.circular(2),
+      child: DefaultTabController(
+        length: 3,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Handle
+            Container(
+              margin: const EdgeInsets.symmetric(vertical: 12),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: AppColors.textHint,
+                borderRadius: BorderRadius.circular(2),
+              ),
             ),
-          ),
 
-          // Header
-          Padding(
-            padding: const EdgeInsets.all(AppConstants.padding),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Select Quality',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  title,
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 14,
+            // Header
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppConstants.padding),
+              child: Column(
+                children: [
+                  Text(
+                    'Select Format',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
+                  const SizedBox(height: 4),
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 14,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Tabs
+            const TabBar(
+              labelColor: AppColors.primary,
+              unselectedLabelColor: AppColors.textSecondary,
+              indicatorColor: AppColors.primary,
+              tabs: [
+                Tab(text: 'Video'),
+                Tab(text: 'Audio'),
+                Tab(text: 'Video Only'),
               ],
             ),
-          ),
+            
+            const Divider(height: 1),
 
-          const Divider(height: 1),
-
-          // Options List
-          Flexible(
-            child: ListView.separated(
-              shrinkWrap: true,
-              padding: const EdgeInsets.all(AppConstants.padding),
-              itemCount: options.length,
-              separatorBuilder: (context, index) => const SizedBox(height: 8),
-              itemBuilder: (context, index) {
-                final option = options[index];
-                return _OptionTile(
-                  option: option,
-                  onTap: () {
-                    Navigator.pop(context);
-                    _startDownload(context, option);
-                  },
-                );
-              },
+            // Tab Views
+            Flexible(
+              child: TabBarView(
+                children: [
+                  _buildOptionList(context, videoOptions, Icons.videocam),
+                  _buildOptionList(context, audioOptions, Icons.audiotrack),
+                  _buildOptionList(context, videoOnlyOptions, Icons.videocam_off),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
+  Widget _buildOptionList(BuildContext context, List<DownloadOption> options, IconData icon) {
+    if (options.isEmpty) {
+      return const Center(
+        child: Text(
+          'No options available',
+          style: TextStyle(color: AppColors.textHint),
+        ),
+      );
+    }
+    
+    return ListView.separated(
+      padding: const EdgeInsets.all(AppConstants.padding),
+      itemCount: options.length,
+      separatorBuilder: (context, index) => const SizedBox(height: 8),
+      itemBuilder: (context, index) {
+        final option = options[index];
+        return _OptionTile(
+          option: option,
+          icon: icon,
+          onTap: () {
+            Navigator.pop(context);
+            _startDownload(context, option);
+          },
+        );
+      },
+    );
+  }
+
   void _startDownload(BuildContext context, DownloadOption option) {
-    final fileName =
-        '${title.replaceAll(RegExp(r'[^\w\s-]'), '')}.${option.extension}';
+    final fileName = '${title.replaceAll(RegExp(r'[^\w\s-]'), '')}.${option.extension}';
 
     context.read<DownloadProvider>().startDownload(
       url: url,
@@ -148,8 +184,9 @@ class DownloadOptionsSheet extends StatelessWidget {
 class _OptionTile extends StatelessWidget {
   final DownloadOption option;
   final VoidCallback onTap;
+  final IconData? icon;
 
-  const _OptionTile({required this.option, required this.onTap});
+  const _OptionTile({required this.option, required this.onTap, this.icon});
 
   @override
   Widget build(BuildContext context) {
@@ -173,9 +210,9 @@ class _OptionTile extends StatelessWidget {
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(
-                option.qualityLabel.contains('Audio')
+                icon ?? (option.qualityLabel.contains('Audio')
                     ? Icons.audiotrack
-                    : Icons.videocam,
+                    : Icons.videocam),
                 color: AppColors.primary,
               ),
             ),

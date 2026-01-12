@@ -112,13 +112,7 @@ class YTDLPService:
     
     def get_download_options(self, url: str) -> List[Dict[str, Any]]:
         """
-        Get available download options for URL
-        
-        Args:
-            url: The URL to get download options for
-            
-        Returns:
-            List of download options with quality, extension, size, and URL
+        Get available download options for URL, categorized and limited
         """
         info = self.extract_info(url, download=False)
         formats = info.get('formats', [])
@@ -126,12 +120,12 @@ class YTDLPService:
         if not formats:
             raise ExtractionException("No formats available for this URL")
         
-        options = []
-        seen_combinations = set()
-        
-        # Process video formats
+        video_audio = []
+        audio_only = []
+        video_only = []
+        seen_combos = set()
+
         for fmt in formats:
-            # Skip formats without URL
             if not fmt.get('url'):
                 continue
             
@@ -141,64 +135,67 @@ class YTDLPService:
             acodec = fmt.get('acodec', 'none')
             filesize = fmt.get('filesize') or fmt.get('filesize_approx')
             
-            if height and vcodec != 'none':
-                quality_label = f"{height}p"
-                
-                # Check if it's video-only (common with high quality YouTube streams)
-                if acodec == 'none':
-                    quality_label += " (Video Only)"
-                
-                combination = (quality_label, ext, 'video')
-                
-                if combination not in seen_combinations:
-                    seen_combinations.add(combination)
-                    options.append({
-                        'quality_label': quality_label,
-                        'extension': ext,
-                        'file_size_approx': filesize,
-                        'download_url': fmt['url']
-                    })
-            
-            # Audio-only formats
+            # Helper to create option dict
+            def create_option(label, type_name):
+                 combo = (label, ext, type_name)
+                 if combo in seen_combos: return None
+                 seen_combos.add(combo)
+                 return {
+                    'quality_label': label,
+                    'extension': ext,
+                    'file_size_approx': filesize,
+                    'download_url': fmt['url'],
+                    'type': type_name # Explicit type for frontend
+                }
+
+            # 1. Video + Audio (The best experience)
+            if height and vcodec != 'none' and acodec != 'none':
+                label = f"{height}p"
+                opt = create_option(label, 'video_audio')
+                if opt: video_audio.append(opt)
+
+            # 2. Audio Only
             elif acodec != 'none' and vcodec == 'none':
-                quality_label = "Audio Only"
-                combination = (quality_label, ext, 'audio')
-                
-                if combination not in seen_combinations:
-                    seen_combinations.add(combination)
-                    options.append({
-                        'quality_label': quality_label,
-                        'extension': ext,
-                        'file_size_approx': filesize,
-                        'download_url': fmt['url']
-                    })
+                label = "Audio Only"
+                # Prefer mp3 or m4a
+                if ext not in ['mp3', 'm4a', 'webm']: continue 
+                opt = create_option(label, 'audio')
+                if opt: audio_only.append(opt)
+
+            # 3. Video Only (Often higher quality)
+            elif height and vcodec != 'none' and acodec == 'none':
+                 label = f"{height}p (Video Only)"
+                 opt = create_option(label, 'video_only')
+                 if opt: video_only.append(opt)
+
+        # Sort Sort Keys
+        def resolution_key(o):
+            try: return int(o['quality_label'].split('p')[0])
+            except: return 0
+
+        video_audio.sort(key=resolution_key, reverse=True)
+        video_only.sort(key=resolution_key, reverse=True)
+        # Audio doesn't need sort by resolution, maybe size?
+        audio_only.sort(key=lambda x: x['file_size_approx'] or 0, reverse=True)
+
+        # Limit to 5 each
+        final_options = []
+        final_options.extend(video_audio[:5])
+        final_options.extend(audio_only[:5])
+        final_options.extend(video_only[:5])
         
-        # If no suitable formats found, add the best format
-        if not options and formats:
-            best_format = formats[-1]
-            options.append({
+        # Fallback if empty (e.g. unknown formats)
+        if not final_options and formats:
+             best = formats[-1]
+             final_options.append({
                 'quality_label': 'Best Available',
-                'extension': best_format.get('ext', 'mp4'),
-                'file_size_approx': best_format.get('filesize') or best_format.get('filesize_approx'),
-                'download_url': best_format['url']
+                'extension': best.get('ext', 'mp4'),
+                'file_size_approx': best.get('filesize'),
+                'download_url': best.get('url'),
+                'type': 'video_audio'
             })
-        
-        # Sort by quality (descending)
-        def sort_key(opt):
-            label = opt['quality_label']
-            if label == 'Audio Only':
-                return 0
-            elif label == 'Best Available':
-                return 9999
-            else:
-                try:
-                    return int(label.replace('p', ''))
-                except:
-                    return 500
-        
-        options.sort(key=sort_key, reverse=True)
-        
-        return options
+
+        return final_options
 
 
 # Global instance
