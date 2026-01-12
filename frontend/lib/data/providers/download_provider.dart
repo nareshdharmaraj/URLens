@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import '../models/download_option.dart';
 import '../models/download_record.dart';
 import '../repositories/download_repository.dart';
+import '../../core/services/notification_service.dart';
 
 /// Download task model
 class DownloadTask {
@@ -68,6 +69,16 @@ class DownloadProvider with ChangeNotifier {
     _activeTasks[taskId] = task;
     notifyListeners();
 
+    // Show initial notification
+    final notificationId = taskId.hashCode;
+    await NotificationService().showProgressNotification(
+      id: notificationId,
+      title: 'Downloading $fileName',
+      body: 'Starting...',
+      progress: 0,
+      maxProgress: 100,
+    );
+
     try {
       final filePath = await _repository.downloadFile(
         url: option.downloadUrl,
@@ -76,6 +87,17 @@ class DownloadProvider with ChangeNotifier {
           if (total > 0) {
             task.progress = received / total;
             notifyListeners();
+            
+            // Update notification every 5% to avoid spamming
+            if ((task.progress * 100).toInt() % 5 == 0) {
+                 NotificationService().showProgressNotification(
+                  id: notificationId,
+                  title: 'Downloading $fileName',
+                  body: '${(task.progress * 100).toInt()}%',
+                  progress: (task.progress * 100).toInt(),
+                  maxProgress: 100,
+                );
+            }
           }
         },
         cancelToken: cancelToken,
@@ -84,6 +106,14 @@ class DownloadProvider with ChangeNotifier {
       // Update task
       task.status = 'completed';
       task.filePath = filePath;
+
+      // Show completion notification
+      await NotificationService().showCompletionNotification(
+        id: notificationId,
+        title: 'Download Complete',
+        body: '$fileName downloaded successfully',
+        filePath: filePath,
+      );
 
       // Get actual file size
       final fileSize = await _repository
@@ -116,9 +146,42 @@ class DownloadProvider with ChangeNotifier {
       });
     } catch (e) {
       task.status = 'failed';
-      task.error = e.toString();
+      task.error = _getFriendlyErrorMessage(e);
       notifyListeners();
+      
+      // Cancel notification on failure
+      await NotificationService().cancelNotification(notificationId);
     }
+  }
+
+  String _getFriendlyErrorMessage(dynamic error) {
+    if (error is DioException) {
+      switch (error.type) {
+        case DioExceptionType.connectionTimeout:
+        case DioExceptionType.sendTimeout:
+        case DioExceptionType.receiveTimeout:
+          return 'Connection timed out. Please checking your internet.';
+        case DioExceptionType.badResponse:
+          return 'Server error (${error.response?.statusCode}). Please try again.';
+        case DioExceptionType.cancel:
+          return 'Download cancelled.';
+        case DioExceptionType.connectionError:
+          return 'No internet connection.';
+        default:
+          return 'Network error occurred.';
+      }
+    } else if (error.toString().contains('FileSystemException')) {
+      if (error.toString().contains('No space left on device')) {
+        return 'Storage full. Please free up space.';
+      } else if (error.toString().contains('Permission denied')) {
+        return 'Storage permission denied.';
+      }
+      return 'File system error. Please check storage permissions.';
+    }
+    
+    return error.toString().length > 50 
+      ? 'An unexpected error occurred.' 
+      : error.toString();
   }
 
   /// Cancel download
@@ -128,6 +191,10 @@ class DownloadProvider with ChangeNotifier {
       task.cancelToken?.cancel('Download cancelled by user');
       task.status = 'cancelled';
       _activeTasks.remove(taskId);
+      
+      // Cancel notification
+      NotificationService().cancelNotification(taskId.hashCode);
+      
       notifyListeners();
     }
   }

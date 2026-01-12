@@ -7,8 +7,11 @@ import '../../widgets/loading_indicator.dart';
 import '../../widgets/error_widget.dart' as custom;
 import 'widgets/url_input_card.dart';
 import 'widgets/media_preview_card.dart';
+import '../../widgets/active_downloads_list.dart';
+import '../../widgets/main_layout.dart';
+import '../../widgets/responsive_layout.dart';
 import '../download/download_options_sheet.dart';
-import '../history/history_screen.dart';
+import '../../../core/services/prefs_service.dart';
 
 /// Home screen - Main screen for URL input and analysis
 class HomeScreen extends StatefulWidget {
@@ -22,15 +25,16 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    // Show disclaimer on first launch (simplified - in production, check if it's first launch)
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkFirstLaunch();
     });
   }
 
   Future<void> _checkFirstLaunch() async {
-    // In production, use SharedPreferences to check if it's first launch
-    // For now, we'll skip showing the disclaimer on every launch
+    final isFirstLaunch = await PrefsService.checkFirstLaunch();
+    if (isFirstLaunch && mounted) {
+      _showDisclaimer();
+    }
   }
 
   void _showDownloadOptions() async {
@@ -38,7 +42,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
     if (provider.currentUrl == null) return;
 
-    // Fetch download options if not already fetched
     if (!provider.hasOptions) {
       await provider.fetchDownloadOptions(provider.currentUrl!);
     }
@@ -59,199 +62,127 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [AppColors.primary, AppColors.primaryLight],
-                ),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Icon(Icons.download, color: Colors.white, size: 20),
-            ),
-            const SizedBox(width: 12),
-            const Text(AppConstants.appName),
-          ],
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.history),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const HistoryScreen()),
-              );
-            },
-            tooltip: 'Download History',
-          ),
-          IconButton(
-            icon: const Icon(Icons.info_outline),
-            onPressed: _showAboutDialog,
-            tooltip: 'About',
-          ),
-        ],
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppConstants.padding),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Welcome Section
-              Text(
-                'Download Media from Any Platform',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.primary,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Paste a URL to get started',
-                style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 24),
-
-              // URL Input Card
-              const URLInputCard(),
-              const SizedBox(height: 24),
-
-              // Content based on state
-              Consumer<MediaProvider>(
-                builder: (context, provider, child) {
-                  if (provider.isAnalyzing) {
-                    return const LoadingIndicator(message: 'Analyzing URL...');
-                  }
-
-                  if (provider.error != null) {
-                    return custom.ErrorWidget(
-                      message: provider.error!,
-                      onRetry: () {
-                        provider.clearError();
-                      },
-                    );
-                  }
-
-                  if (provider.hasMetadata &&
-                      provider.currentMetadata != null) {
-                    return Column(
-                      children: [
-                        MediaPreviewCard(
-                          metadata: provider.currentMetadata!,
-                          onDownload: _showDownloadOptions,
-                        ),
-                        if (provider.isFetchingOptions) ...[
-                          const SizedBox(height: 16),
-                          const LoadingIndicator(
-                            message: 'Fetching download options...',
-                          ),
-                        ],
-                      ],
-                    );
-                  }
-
-                  return _buildSupportedPlatforms();
-                },
-              ),
-            ],
-          ),
-        ),
+    return MainLayout(
+      title: AppConstants.appName,
+      child: ResponsiveLayout(
+        sideMenu: const SizedBox(), // Handled by MainLayout
+        mobile: _buildContent(isDesktop: false),
+        desktop: _buildContent(isDesktop: true),
       ),
     );
   }
 
-  Widget _buildSupportedPlatforms() {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(AppConstants.padding),
-        child: Column(
+  Widget _buildContent({required bool isDesktop}) {
+    if (isDesktop) {
+      return SingleChildScrollView(
+        padding: const EdgeInsets.all(AppConstants.padding * 2),
+        child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                const Icon(Icons.check_circle, color: AppColors.success),
-                const SizedBox(width: 8),
-                Text(
-                  'Supported Platforms',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+            // Left Panel: Input & Active Downloads
+            Expanded(
+              flex: 4,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _buildWelcomeSection(),
+                  const SizedBox(height: 32),
+                  const URLInputCard(),
+                ],
+              ),
+            ),
+            const SizedBox(width: 32),
+            
+            // Right Panel: Analysis Result
+            Expanded(
+              flex: 6,
+              child: Column(
+                children: [
+                  _buildDynamicContent(),
+                  const SizedBox(height: 32),
+                  const ActiveDownloadsList(),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(AppConstants.padding),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _buildWelcomeSection(),
+          const SizedBox(height: 24),
+          const URLInputCard(),
+          const SizedBox(height: 16),
+          _buildDynamicContent(),
+          const SizedBox(height: 24),
+          const ActiveDownloadsList(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWelcomeSection() {
+    return Column(
+      children: [
+        Text(
+          'Download Media from Any Platform',
+          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: AppColors.primary,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 8),
+        const Text(
+          'Paste a URL to get started',
+          style: TextStyle(color: AppColors.textSecondary, fontSize: 16),
+          textAlign: TextAlign.center,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDynamicContent() {
+    return Consumer<MediaProvider>(
+      builder: (context, provider, child) {
+        if (provider.isAnalyzing) {
+          return const LoadingIndicator(message: 'Analyzing URL...');
+        }
+
+        if (provider.error != null) {
+          return custom.ErrorWidget(
+            message: provider.error!,
+            onRetry: () {
+              provider.clearError();
+            },
+          );
+        }
+
+        if (provider.hasMetadata && provider.currentMetadata != null) {
+          return Column(
+            children: [
+              MediaPreviewCard(
+                metadata: provider.currentMetadata!,
+                onDownload: _showDownloadOptions,
+              ),
+              if (provider.isFetchingOptions) ...[
+                const SizedBox(height: 16),
+                const LoadingIndicator(
+                  message: 'Fetching download options...',
                 ),
               ],
-            ),
-            const SizedBox(height: 16),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children:
-                  [
-                        'YouTube',
-                        'Instagram',
-                        'Twitter',
-                        'Facebook',
-                        'TikTok',
-                        'Vimeo',
-                        '& more...',
-                      ]
-                      .map(
-                        (platform) => Chip(
-                          label: Text(
-                            platform,
-                            style: const TextStyle(fontSize: 12),
-                          ),
-                          backgroundColor: AppColors.primary.withValues(alpha: 0.1),
-                        ),
-                      )
-                      .toList(),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+            ],
+          );
+        }
 
-  void _showAboutDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text(AppConstants.appName),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Version ${AppConstants.appVersion}',
-              style: const TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 14,
-              ),
-            ),
-            const SizedBox(height: 16),
-            const Text(AppConstants.appDescription),
-            const SizedBox(height: 16),
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-                _showDisclaimer();
-              },
-              child: const Text('View Disclaimer'),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
-          ),
-        ],
-      ),
+        // REMOVED SupportedPlatforms Widget as requested
+        return const SizedBox.shrink();
+      },
     );
   }
 

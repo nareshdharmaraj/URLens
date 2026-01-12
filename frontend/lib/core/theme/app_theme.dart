@@ -5,7 +5,7 @@ import '../constants/app_constants.dart';
 
 /// Application theme configuration
 class AppTheme {
-  // Light Theme
+  // Vibrant Light Theme with Glassy Effect
   static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,
@@ -16,7 +16,7 @@ class AppTheme {
       // Color Scheme
       colorScheme: const ColorScheme.light(
         primary: AppColors.primary,
-        secondary: AppColors.accent,
+        secondary: AppColors.secondary,
         surface: AppColors.surface,
         error: AppColors.error,
         onPrimary: AppColors.textOnPrimary,
@@ -27,46 +27,48 @@ class AppTheme {
 
       // App Bar Theme
       appBarTheme: const AppBarTheme(
-        backgroundColor: AppColors.surface,
+        backgroundColor: Colors.transparent, // Transparent for glassy effect
         foregroundColor: AppColors.textPrimary,
         elevation: 0,
         centerTitle: true,
         systemOverlayStyle: SystemUiOverlayStyle.dark,
         titleTextStyle: TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.w600,
+          fontSize: 22,
+          fontWeight: FontWeight.bold,
           color: AppColors.textPrimary,
+          letterSpacing: 0.5,
         ),
+        iconTheme: IconThemeData(color: AppColors.textPrimary),
       ),
 
       // Card Theme
       cardTheme: CardThemeData(
-        color: AppColors.surface,
-        elevation: 2,
+        color: AppColors.glassySurface, // Semi-transparent white
+        elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppConstants.borderRadius),
+          side: const BorderSide(
+            color: Colors.white, // Subtle white border
+            width: 1.5,
+          ),
         ),
       ),
 
       // Input Decoration Theme
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: AppColors.surface,
+        fillColor: Colors.white.withAlpha(200),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppConstants.borderRadius),
-          borderSide: const BorderSide(color: AppColors.textHint),
+          borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppConstants.borderRadius),
-          borderSide: const BorderSide(color: AppColors.textHint),
+          borderSide: BorderSide.none,
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppConstants.borderRadius),
           borderSide: const BorderSide(color: AppColors.primary, width: 2),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppConstants.borderRadius),
-          borderSide: const BorderSide(color: AppColors.error),
         ),
         contentPadding: const EdgeInsets.all(AppConstants.padding),
       ),
@@ -76,93 +78,94 @@ class AppTheme {
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
           foregroundColor: AppColors.textOnPrimary,
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppConstants.borderRadius),
           ),
-          elevation: 2,
+          elevation: 4,
+          shadowColor: AppColors.primary.withAlpha(80),
         ),
       ),
-
-      // Text Button Theme
-      textButtonTheme: TextButtonThemeData(
-        style: TextButton.styleFrom(
-          foregroundColor: AppColors.primary,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        ),
-      ),
-
+      
       // Floating Action Button Theme
-      floatingActionButtonTheme: const FloatingActionButtonThemeData(
+      floatingActionButtonTheme: FloatingActionButtonThemeData(
         backgroundColor: AppColors.primary,
         foregroundColor: AppColors.textOnPrimary,
+        elevation: 4,
+        shape: RoundedRectangleBorder(
+             borderRadius: BorderRadius.circular(16)
+        )
       ),
 
-      // Bottom Navigation Bar Theme
-      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-        backgroundColor: AppColors.surface,
-        selectedItemColor: AppColors.primary,
-        unselectedItemColor: AppColors.textSecondary,
-        type: BottomNavigationBarType.fixed,
-        elevation: 8,
+      // Navigation Rail / Drawer Theme (Custom handled in SideMenu, but defaults here)
+      navigationRailTheme: NavigationRailThemeData(
+        backgroundColor: Colors.white.withAlpha(200),
+        selectedIconTheme: const IconThemeData(color: AppColors.primary),
+        unselectedIconTheme: const IconThemeData(color: AppColors.textSecondary),
+        labelType: NavigationRailLabelType.all,
       ),
     );
   }
 
-  // Dark Theme
+  // Dark Theme with Glassy Effect
   static ThemeData get darkTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
       primaryColor: AppColors.primary,
-      scaffoldBackgroundColor: AppColors.darkBackground,
+      scaffoldBackgroundColor: AppColors.background,
 
       // Color Scheme
       colorScheme: const ColorScheme.dark(
         primary: AppColors.primary,
-        secondary: AppColors.accent,
-        surface: AppColors.darkSurface,
+        secondary: AppColors.secondary,
+        surface: AppColors.surface,
         error: AppColors.error,
         onPrimary: AppColors.textOnPrimary,
         onSecondary: AppColors.textOnPrimary,
-        onSurface: AppColors.darkTextPrimary,
+        onSurface: AppColors.textPrimary,
         onError: AppColors.textOnPrimary,
       ),
 
       // App Bar Theme
       appBarTheme: const AppBarTheme(
-        backgroundColor: AppColors.darkSurface,
-        foregroundColor: AppColors.darkTextPrimary,
+        backgroundColor: Colors.transparent, // Transparent for glassy effect
+        foregroundColor: AppColors.textPrimary,
         elevation: 0,
         centerTitle: true,
         systemOverlayStyle: SystemUiOverlayStyle.light,
         titleTextStyle: TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.w600,
-          color: AppColors.darkTextPrimary,
+          fontSize: 22,
+          fontWeight: FontWeight.bold,
+          color: AppColors.textPrimary,
+          letterSpacing: 0.5,
         ),
       ),
 
       // Card Theme
       cardTheme: CardThemeData(
-        color: AppColors.darkSurface,
-        elevation: 2,
+        color: AppColors.surface.withAlpha(200), // Semi-transparent
+        elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppConstants.borderRadius),
+          side: BorderSide(
+            color: Colors.white.withAlpha(25), // Subtle border
+            width: 1,
+          ),
         ),
       ),
 
       // Input Decoration Theme
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: AppColors.darkSurface,
+        fillColor: AppColors.surface.withAlpha(150),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppConstants.borderRadius),
-          borderSide: const BorderSide(color: AppColors.darkTextSecondary),
+          borderSide: BorderSide(color: Colors.white.withAlpha(30)),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppConstants.borderRadius),
-          borderSide: const BorderSide(color: AppColors.darkTextSecondary),
+          borderSide: BorderSide(color: Colors.white.withAlpha(30)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppConstants.borderRadius),
@@ -176,21 +179,22 @@ class AppTheme {
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
           foregroundColor: AppColors.textOnPrimary,
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppConstants.borderRadius),
           ),
-          elevation: 2,
+          elevation: 4,
+          shadowColor: AppColors.primary.withAlpha(100),
         ),
       ),
 
       // Bottom Navigation Bar Theme
-      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-        backgroundColor: AppColors.darkSurface,
+      bottomNavigationBarTheme: BottomNavigationBarThemeData(
+        backgroundColor: AppColors.surface.withAlpha(230),
         selectedItemColor: AppColors.primary,
-        unselectedItemColor: AppColors.darkTextSecondary,
+        unselectedItemColor: AppColors.textHint,
         type: BottomNavigationBarType.fixed,
-        elevation: 8,
+        elevation: 0,
       ),
     );
   }

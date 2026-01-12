@@ -95,10 +95,16 @@ class _URLInputCardState extends State<URLInputCard> {
               Row(
                 children: [
                   Expanded(
-                    child: OutlinedButton.icon(
+                    child: OutlinedButton(
                       onPressed: _pasteFromClipboard,
-                      icon: const Icon(Icons.content_paste),
-                      label: const Text('Paste'),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.content_paste, size: 18),
+                          SizedBox(width: 6),
+                          Text('Paste'),
+                        ],
+                      ),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -106,10 +112,13 @@ class _URLInputCardState extends State<URLInputCard> {
                     flex: 2,
                     child: Consumer<MediaProvider>(
                       builder: (context, provider, child) {
-                        return ElevatedButton.icon(
+                        return ElevatedButton(
                           onPressed: provider.isAnalyzing ? null : _analyze,
-                          icon: provider.isAnalyzing
-                              ? const SizedBox(
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (provider.isAnalyzing)
+                                const SizedBox(
                                   width: 16,
                                   height: 16,
                                   child: CircularProgressIndicator(
@@ -119,9 +128,15 @@ class _URLInputCardState extends State<URLInputCard> {
                                     ),
                                   ),
                                 )
-                              : const Icon(Icons.search),
-                          label: Text(
-                            provider.isAnalyzing ? 'Analyzing...' : 'Analyze',
+                              else
+                                const Icon(Icons.search, size: 18),
+                              const SizedBox(width: 6),
+                              Text(
+                                provider.isAnalyzing
+                                    ? 'Analyzing...'
+                                    : 'Analyze',
+                              ),
+                            ],
                           ),
                         );
                       },

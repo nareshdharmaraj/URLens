@@ -8,7 +8,10 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/utils/format_utils.dart';
 import '../../../../core/utils/file_utils.dart';
+import '../../../../core/utils/url_utils.dart';
 import '../../../widgets/platform_icon.dart';
+import '../../player/video_player_screen.dart';
+import '../../player/image_viewer_screen.dart';
 
 /// History list item widget
 class HistoryListItem extends StatelessWidget {
@@ -22,8 +25,40 @@ class HistoryListItem extends StatelessWidget {
   });
 
   Future<void> _openFile(BuildContext context) async {
+    final filePath = record.localFilePath;
+    
+    if (FileUtils.isVideo(filePath)) {
+       Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => VideoPlayerScreen(
+            filePath: filePath,
+            title: record.title,
+          ),
+        ),
+      );
+      return;
+    } 
+    
+    if (FileUtils.isAudio(filePath)) {
+       // Audio player not implemented yet, fall back to system
+    }
+
+    if (FileUtils.isImage(filePath)) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ImageViewerScreen(
+            filePath: filePath,
+            title: record.title,
+          ),
+        ),
+      );
+      return;
+    }
+
     try {
-      final result = await OpenFile.open(record.localFilePath);
+      final result = await OpenFile.open(filePath);
       if (result.type != ResultType.done) {
          if (context.mounted) {
            ScaffoldMessenger.of(context).showSnackBar(
@@ -94,7 +129,7 @@ class HistoryListItem extends StatelessWidget {
                 borderRadius: BorderRadius.circular(8),
                 child: record.thumbnailUrl != null
                     ? CachedNetworkImage(
-                        imageUrl: record.thumbnailUrl!,
+                        imageUrl: UrlUtils.getProxiedUrl(record.thumbnailUrl!),
                         width: 80,
                         height: 60,
                         fit: BoxFit.cover,

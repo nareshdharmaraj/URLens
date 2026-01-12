@@ -3,6 +3,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../data/models/media_metadata.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/utils/url_utils.dart';
 import '../../../widgets/platform_icon.dart';
 
 /// Media preview card widget
@@ -32,7 +33,7 @@ class MediaPreviewCard extends StatelessWidget {
               child: AspectRatio(
                 aspectRatio: 16 / 9,
                 child: CachedNetworkImage(
-                  imageUrl: metadata.thumbnailUrl!,
+                  imageUrl: UrlUtils.getProxiedUrl(metadata.thumbnailUrl!),
                   fit: BoxFit.cover,
                   placeholder: (context, url) => Container(
                     color: AppColors.surface,

@@ -10,6 +10,8 @@ class ApiConstants {
   static String get analyzeEndpoint => '$baseUrl/api/$apiVersion/analyze';
   static String get downloadInfoEndpoint =>
       '$baseUrl/api/$apiVersion/download-info';
+  static String get proxyDownloadEndpoint =>
+      '$baseUrl/api/$apiVersion/proxy-download';
 
   // Timeouts
   static const Duration connectTimeout = Duration(seconds: 30);
