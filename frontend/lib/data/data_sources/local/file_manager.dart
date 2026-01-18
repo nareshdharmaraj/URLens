@@ -5,7 +5,6 @@ import 'package:path/path.dart' as path;
 import 'package:universal_html/html.dart' as html;
 import 'package:gal/gal.dart';
 import '../../../core/utils/file_utils.dart';
-import '../../../core/utils/file_utils.dart';
 import '../../../core/constants/api_constants.dart';
 
 /// File manager for download operations

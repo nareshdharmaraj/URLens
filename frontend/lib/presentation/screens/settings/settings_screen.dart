@@ -170,131 +170,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             },
           ),
 
-          // Developer Options (Debug Mode Only)
-          if (kDebugMode) ...[
-            const SizedBox(height: 24),
-            _buildSectionHeader('Developer Options', Icons.code_outlined),
-            Consumer<SettingsProvider>(
-              builder: (context, settings, child) {
-                return Card(
-                  elevation: 2,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  color: Colors.blue.shade50,
-                  child: Column(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.developer_mode,
-                              color: Colors.blue.shade700,
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                'Debug Mode Only',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.blue.shade700,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const Divider(height: 1),
-                      SwitchListTile(
-                        title: const Text(
-                          'Use Local Backend',
-                          style: TextStyle(fontWeight: FontWeight.w600),
-                        ),
-                        subtitle: Text(
-                          settings.useLocalBackend
-                              ? '🟢 localhost:8000'
-                              : '🟠 urlens.onrender.com',
-                          style: TextStyle(
-                            color: settings.useLocalBackend
-                                ? Colors.green.shade700
-                                : Colors.orange.shade700,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        value: settings.useLocalBackend,
-                        onChanged: (value) async {
-                          await settings.toggleBackend(value);
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Row(
-                                  children: [
-                                    Icon(
-                                      value ? Icons.computer : Icons.cloud,
-                                      color: Colors.white,
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: Text(
-                                        'Backend switched to ${value ? "Local" : "Cloud"}.',
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                backgroundColor: value
-                                    ? Colors.green
-                                    : Colors.orange,
-                                duration: const Duration(seconds: 3),
-                              ),
-                            );
-                          }
-                        },
-                        secondary: _buildIconContainer(
-                          settings.useLocalBackend
-                              ? Icons.computer
-                              : Icons.cloud,
-                          Colors.blue,
-                        ),
-                      ),
-                      const Divider(height: 1),
-                      ListTile(
-                        leading: const Icon(Icons.link, size: 20),
-                        title: const Text(
-                          'Backend URL',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        subtitle: Text(
-                          settings.getBackendUrl(),
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontFamily: 'monospace',
-                          ),
-                        ),
-                        trailing: IconButton(
-                          icon: const Icon(Icons.copy, size: 18),
-                          tooltip: 'Copy URL',
-                          onPressed: () {
-                            // Copy to clipboard functionality
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('URL copied to clipboard'),
-                                duration: Duration(seconds: 2),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
-          ],
+
 
           const SizedBox(height: 24),
 
@@ -389,25 +265,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     );
                   },
                 ),
-                const Divider(height: 1, indent: 16, endIndent: 16),
-                ListTile(
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
-                  ),
-                  leading: _buildIconContainer(Icons.code, AppColors.secondary),
-                  title: const Text(
-                    'GitHub Repository',
-                    style: TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                  subtitle: const Text('View source code'),
-                  trailing: const Icon(
-                    Icons.open_in_new,
-                    size: 16,
-                    color: AppColors.textHint,
-                  ),
-                  onTap: () => _launchURL('https://github.com'),
-                ),
+
                 const Divider(height: 1, indent: 16, endIndent: 16),
                 ListTile(
                   contentPadding: const EdgeInsets.symmetric(
