@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
+import '../../core/utils/error_utils.dart';
 import '../models/download_option.dart';
 import '../models/download_record.dart';
 import '../repositories/download_repository.dart';
@@ -188,33 +189,7 @@ class DownloadProvider with ChangeNotifier {
   }
 
   String _getFriendlyErrorMessage(dynamic error) {
-    if (error is DioException) {
-      switch (error.type) {
-        case DioExceptionType.connectionTimeout:
-        case DioExceptionType.sendTimeout:
-        case DioExceptionType.receiveTimeout:
-          return 'Connection timed out. Please checking your internet.';
-        case DioExceptionType.badResponse:
-          return 'Server error (${error.response?.statusCode}). Please try again.';
-        case DioExceptionType.cancel:
-          return 'Download cancelled.';
-        case DioExceptionType.connectionError:
-          return 'No internet connection.';
-        default:
-          return 'Network error occurred.';
-      }
-    } else if (error.toString().contains('FileSystemException')) {
-      if (error.toString().contains('No space left on device')) {
-        return 'Storage full. Please free up space.';
-      } else if (error.toString().contains('Permission denied')) {
-        return 'Storage permission denied.';
-      }
-      return 'File system error. Please check storage permissions.';
-    }
-
-    return error.toString().length > 50
-        ? 'An unexpected error occurred.'
-        : error.toString();
+    return ErrorUtils.getFriendlyErrorMessage(error);
   }
 
   /// Cancel download

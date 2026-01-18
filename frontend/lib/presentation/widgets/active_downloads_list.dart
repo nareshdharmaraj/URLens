@@ -24,10 +24,13 @@ class ActiveDownloadsList extends StatelessWidget {
                 children: [
                   const Icon(Icons.downloading, color: AppColors.primary),
                   const SizedBox(width: 8),
-                  Text(
-                    'Active Downloads',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
+                  Expanded(
+                    child: Text(
+                      'Active Downloads',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ],
@@ -81,21 +84,21 @@ class _ActiveDownloadItem extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 4),
-                        Text(
-                          task.status == 'downloading'
-                              ? '${(task.progress * 100).toInt()}% • ${task.option.qualityLabel}'
-                              : (task.status == 'failed' && task.error != null) 
-                                  ? task.error! 
-                                  : task.status.toUpperCase(),
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: task.status == 'failed'
-                                ? AppColors.error
-                                : AppColors.textSecondary,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
+                      Text(
+                        task.status == 'downloading'
+                            ? '${(task.progress * 100).toInt()}% • ${task.option.qualityLabel}'
+                            : (task.status == 'failed' && task.error != null)
+                                ? task.error!
+                                : task.status.toUpperCase(),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: task.status == 'failed'
+                              ? AppColors.error
+                              : AppColors.textSecondary,
                         ),
+                        maxLines: 1, // Reduced to 1 to prevent layout shifts
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ],
                   ),
                 ),

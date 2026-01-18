@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
 import 'package:dio/dio.dart';
 import 'package:path/path.dart' as path;
 import 'package:universal_html/html.dart' as html;
-import 'package:image_gallery_saver/image_gallery_saver.dart';
+import 'package:gal/gal.dart';
 import '../../../core/utils/file_utils.dart';
 import '../../../core/constants/api_constants.dart';
 
@@ -98,46 +98,18 @@ class FileManager {
         // Save to device gallery for mobile platforms
         if (Platform.isAndroid || Platform.isIOS) {
           try {
-            final ext = path.extension(fileName).toLowerCase();
-
-            // Read file as bytes
-            final bytes = await File(filePath).readAsBytes();
-
-            // Check file type and save to appropriate gallery
-            if ([
-              '.mp4',
-              '.mov',
-              '.avi',
-              '.mkv',
-              '.webm',
-              '.flv',
-              '.wmv',
-            ].contains(ext)) {
-              // Save video to gallery
-              final result = await ImageGallerySaver.saveFile(
-                filePath,
-                name: path.basenameWithoutExtension(fileName),
-                isReturnPathOfIOS: true,
-              );
-              debugPrint('✓ Video saved to gallery: $result');
-            } else if ([
-              '.jpg',
-              '.jpeg',
-              '.png',
-              '.gif',
-              '.webp',
-              '.bmp',
-            ].contains(ext)) {
-              // Save image to gallery
-              final result = await ImageGallerySaver.saveImage(
-                bytes,
-                name: path.basenameWithoutExtension(fileName),
-              );
-              debugPrint('✓ Image saved to gallery: $result');
-            }
+            // Use gal to save file to gallery
+            await Gal.putVideo(filePath);
+            debugPrint('✓ File saved to gallery: $filePath');
           } catch (e) {
-            // Don't fail the download if gallery save fails
-            debugPrint('Gallery save error (file still downloaded): $e');
+            // Try as image if video fails
+            try {
+              await Gal.putImage(filePath);
+              debugPrint('✓ Image saved to gallery: $filePath');
+            } catch (e2) {
+              // Don't fail the download if gallery save fails
+              debugPrint('Gallery save error (file still downloaded): $e2');
+            }
           }
         }
 

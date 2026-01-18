@@ -12,6 +12,19 @@
 .swiftpm/
 migrate_working_dir/
 
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+backend/build/
+backend/dist/
+backend/*.egg-info/
+.venv/
+venv/
+ENV/
+
 # IntelliJ related
 *.iml
 *.ipr

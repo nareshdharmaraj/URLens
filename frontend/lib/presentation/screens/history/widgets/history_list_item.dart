@@ -12,6 +12,7 @@ import '../../../../core/utils/url_utils.dart';
 import '../../../widgets/platform_icon.dart';
 import '../../player/video_player_screen.dart';
 import '../../player/image_viewer_screen.dart';
+import '../../player/audio_player_screen.dart';
 
 /// History list item widget
 class HistoryListItem extends StatelessWidget {
@@ -40,9 +41,20 @@ class HistoryListItem extends StatelessWidget {
       return;
     } 
     
+    
     if (FileUtils.isAudio(filePath)) {
-       // Audio player not implemented yet, fall back to system
-       // Fall through to OpenFile below
+       Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => AudioPlayerScreen(
+            filePath: filePath,
+            title: record.title,
+            thumbnailUrl: record.thumbnailUrl,
+            artist: record.platform,
+          ),
+        ),
+      );
+      return;
     }
 
     if (FileUtils.isImage(filePath)) {
@@ -195,11 +207,14 @@ class HistoryListItem extends StatelessWidget {
                         if (record.platform != null) ...[
                           PlatformIcon(platform: record.platform!, size: 16),
                           const SizedBox(width: 4),
-                          Text(
-                            record.platform!.toUpperCase(),
-                            style: const TextStyle(
-                              fontSize: 11,
-                              color: AppColors.textSecondary,
+                          Flexible(
+                            child: Text(
+                              record.platform!.toUpperCase(),
+                              style: const TextStyle(
+                                fontSize: 11,
+                                color: AppColors.textSecondary,
+                              ),
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                           const SizedBox(width: 8),

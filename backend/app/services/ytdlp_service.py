@@ -1,11 +1,13 @@
 """yt-dlp service wrapper"""
 
 import yt_dlp
+import random
 from typing import Dict, List, Any
 from app.core.logger import logger
 from app.core.exceptions import (
     UnsupportedURLException,
     PrivateContentException,
+    DRMProtectedException,
     ExtractionException,
     NetworkException,
 )
@@ -17,24 +19,38 @@ class YTDLPService:
 
     def __init__(self):
         """Initialize yt-dlp options"""
+        self.user_agents = [
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0",
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Safari/605.1.15",
+            "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        ]
+        
+        # Select random user agent for this instance
+        self.current_user_agent = random.choice(self.user_agents)
+
         self.base_options = {
             "quiet": not settings.DEBUG,
             "no_warnings": not settings.DEBUG,
             "socket_timeout": settings.TIMEOUT,
-            "no_check_certificate": False,
-            "prefer_insecure": False,
-            # Better headers to avoid bot detection
-            "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-            "referer": "https://www.youtube.com/",
+            "no_check_certificate": True, # Allow for some leniency with certificates
+            "prefer_insecure": True, # Sometimes needed for old proxies/sites
+            "geo_bypass": True, # Attempt to bypass geo-restrictions
+            "ignoreerrors": True, # Don't stop batch downloading on first error (useful for playlists)
+            
+            # Anti-Bot Headers
+            "user_agent": self.current_user_agent,
+            "referer": "https://www.google.com/", # Generic referer often works better than specific one
+            
             # Force best quality with audio merged
-            # This ensures video+audio are merged if separate streams
             "format": "bestvideo+bestaudio/best",
-            # Merge output format
             "merge_output_format": "mp4",
+            
             # YouTube specific options
             "extractor_args": {
                 "youtube": {
-                    "player_client": ["android", "web"],
+                    "player_client": ["android", "web", "ios"], # Rotate clients
                     "player_skip": ["configs"],
                 }
             },
@@ -42,7 +58,8 @@ class YTDLPService:
 
     def _get_browser_cookies(self):
         """Try to get cookies from available browsers"""
-        browsers = ["chrome", "firefox", "edge"]
+        # Try a wider range of browsers and profiles
+        browsers = ["chrome", "firefox", "edge", "opera", "brave", "vivaldi", "safari"]
 
         for browser in browsers:
             try:
@@ -97,13 +114,36 @@ class YTDLPService:
         except yt_dlp.utils.DownloadError as e:  # type: ignore
             error_msg = str(e).lower()
 
-            if "private" in error_msg or "not available" in error_msg:
+            # Check for DRM-protected content
+            if any(
+                keyword in error_msg
+                for keyword in [
+                    "drm",
+                    "widevine",
+                    "protected content",
+                    "encrypted",
+                    "netflix",
+                    "prime video",
+                    "subscription required",
+                    "premium content",
+                    "paid content",
+                ]
+            ):
+                logger.error(f"DRM-protected content detected: {url}")
+                raise DRMProtectedException(
+                    "This content is protected by Digital Rights Management (DRM). "
+                    "To respect content creators' rights and privacy policies, URLens cannot download DRM-protected content. "
+                    "Please stream this content through the official platform."
+                )
+            elif "private" in error_msg or "not available" in error_msg:
                 logger.error(f"Private/unavailable content: {url}")
                 raise PrivateContentException("Content is private or not available")
             elif "geo" in error_msg or "restricted" in error_msg:
                 logger.error(f"Geo-restricted content: {url}")
                 raise PrivateContentException("Content is geographically restricted")
-            elif "sign in" in error_msg or "bot" in error_msg or "cookies" in error_msg:
+
+
+            if "sign in" in error_msg or "bot" in error_msg or "cookies" in error_msg:
                 # YouTube bot detection - try again with browser cookies
                 logger.warning(
                     f"YouTube bot detection, retrying with browser cookies: {url}"
@@ -172,6 +212,23 @@ class YTDLPService:
             platform = "facebook"
         elif "tiktok" in platform:
             platform = "tiktok"
+        elif "hotstar" in platform:
+            platform = "hotstar"
+        elif "sonyliv" in platform:
+            platform = "sonyliv"
+        elif "zee5" in platform:
+            platform = "zee5"
+        elif "amazon" in platform or "prime" in platform:
+            platform = "primevideo"
+        elif "netflix" in platform:
+            platform = "netflix"
+        elif "sunnxt" in platform:
+            platform = "sunnxt"
+        elif "aha" in platform:
+            platform = "aha"
+        elif "voot" in platform or "jiocinema" in platform:
+            platform = "jiocinema"
+
 
         return {
             "platform": platform,

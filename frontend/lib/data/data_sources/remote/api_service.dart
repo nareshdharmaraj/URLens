@@ -21,6 +21,18 @@ class ApiService {
 
     // Add interceptors for logging (in debug mode)
     _dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) {
+          // Dynamic Base URL support
+          // This allows switching between Local/Cloud backend at runtime
+          if (ApiConstants.baseUrl.isNotEmpty) {
+            options.baseUrl = ApiConstants.baseUrl;
+          }
+          return handler.next(options);
+        },
+      ),
+    );
+    _dio.interceptors.add(
       LogInterceptor(requestBody: true, responseBody: true, error: true),
     );
   }

@@ -1,9 +1,0 @@
-# This file configures the analyzer for the workspace
-# The actual Flutter app is in the frontend/ directory
-# The frontend directory has its own analysis_options.yaml
-
-analyzer:
-  exclude:
-    - backend/**
-    - docs/**
-    - '**/generated/**'

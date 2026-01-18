@@ -1,12 +1,104 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import '../../widgets/main_layout.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../data/providers/settings_provider.dart';
+import '../../../data/data_sources/local/database_helper.dart';
+import '../privacy/privacy_screen.dart';
 
-class SettingsScreen extends StatelessWidget {
+class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
+
+  @override
+  State<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends State<SettingsScreen> {
+  String _version = '1.0.0';
+  String _buildNumber = '1';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPackageInfo();
+  }
+
+  Future<void> _loadPackageInfo() async {
+    try {
+      final packageInfo = await PackageInfo.fromPlatform();
+      setState(() {
+        _version = packageInfo.version;
+        _buildNumber = packageInfo.buildNumber;
+      });
+    } catch (e) {
+      // Handle error silently
+    }
+  }
+
+  Future<void> _clearHistory() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Clear History'),
+        content: const Text(
+          'Are you sure you want to clear all download history? This action cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: AppColors.error),
+            child: const Text('Clear'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true && mounted) {
+      try {
+        await DatabaseHelper.instance.clearAllDownloads();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('History cleared successfully'),
+              backgroundColor: AppColors.success,
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to clear history: $e'),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  Future<void> _launchURL(String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Could not open $url'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -16,51 +108,51 @@ class SettingsScreen extends StatelessWidget {
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          _buildSectionHeader('Preferences'),
+          // Appearance Section
+          _buildSectionHeader('Appearance', Icons.palette_outlined),
+          _buildAppearanceCard(),
+
+          const SizedBox(height: 24),
+
+          // Download Settings
+          _buildSectionHeader('Downloads', Icons.download_outlined),
+          _buildDownloadCard(),
+
+          const SizedBox(height: 24),
+
+          // Notifications Section
+          _buildSectionHeader('Notifications', Icons.notifications_outlined),
           Consumer<SettingsProvider>(
             builder: (context, settings, child) {
               return Card(
+                elevation: 2,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 child: Column(
                   children: [
                     SwitchListTile(
-                      title: const Text('Notifications'),
-                      subtitle: const Text('Receive download updates'),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      title: const Text('Download Notifications', style: TextStyle(fontWeight: FontWeight.w600)),
+                      subtitle: const Text(
+                        'Get notified when downloads complete',
+                      ),
                       value: settings.notificationsEnabled,
+                      activeColor: AppColors.primary,
                       onChanged: (value) {
                         settings.toggleNotifications(value);
-                      },
-                      secondary: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary.withAlpha(25),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Icon(
-                          Icons.notifications,
-                          color: AppColors.primary,
-                        ),
-                      ),
-                    ),
-                    const Divider(),
-                    SwitchListTile(
-                      title: const Text('Dark Mode'),
-                      subtitle: const Text('Use dark theme'),
-                      value: settings.themeMode == ThemeMode.dark,
-                      onChanged: (value) {
-                        settings.setThemeMode(
-                          value ? ThemeMode.dark : ThemeMode.light,
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              value
+                                  ? 'Notifications enabled'
+                                  : 'Notifications disabled',
+                            ),
+                            duration: const Duration(seconds: 2),
+                          ),
                         );
                       },
-                      secondary: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: AppColors.secondary.withAlpha(25),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Icon(
-                          Icons.dark_mode,
-                          color: AppColors.secondary,
-                        ),
+                      secondary: _buildIconContainer(
+                        Icons.notifications_active,
+                        AppColors.accent,
                       ),
                     ),
                   ],
@@ -72,23 +164,49 @@ class SettingsScreen extends StatelessWidget {
           // Developer Options (Debug Mode Only)
           if (kDebugMode) ...[
             const SizedBox(height: 24),
-            _buildSectionHeader('Developer Options'),
+            _buildSectionHeader('Developer Options', Icons.code_outlined),
             Consumer<SettingsProvider>(
               builder: (context, settings, child) {
                 return Card(
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  color: Colors.blue.shade50,
                   child: Column(
                     children: [
+                      Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.developer_mode,
+                              color: Colors.blue.shade700,
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                'Debug Mode Only',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.blue.shade700,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Divider(height: 1),
                       SwitchListTile(
-                        title: const Text('Use Local Backend'),
+                        title: const Text('Use Local Backend', style: TextStyle(fontWeight: FontWeight.w600)),
                         subtitle: Text(
                           settings.useLocalBackend
-                              ? 'localhost:8000'
-                              : 'urlens.onrender.com',
+                              ? '🟢 localhost:8000'
+                              : '🟠 urlens.onrender.com',
                           style: TextStyle(
                             color: settings.useLocalBackend
-                                ? Colors.green
-                                : Colors.orange,
-                            fontSize: 12,
+                                ? Colors.green.shade700
+                                : Colors.orange.shade700,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                         value: settings.useLocalBackend,
@@ -97,32 +215,44 @@ class SettingsScreen extends StatelessWidget {
                           if (context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content: Text(
-                                  'Backend switched to ${value ? "Local" : "Cloud"}. Restart recommended.',
+                                content: Row(
+                                  children: [
+                                    Icon(
+                                      value ? Icons.computer : Icons.cloud,
+                                      color: Colors.white,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Text(
+                                        'Backend switched to ${value ? "Local" : "Cloud"}.',
+                                      ),
+                                    ),
+                                  ],
                                 ),
+                                backgroundColor: value
+                                    ? Colors.green
+                                    : Colors.orange,
                                 duration: const Duration(seconds: 3),
                               ),
                             );
                           }
                         },
-                        secondary: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Colors.blue.withAlpha(25),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Icon(
-                            Icons.developer_mode,
-                            color: Colors.blue,
-                          ),
+                        secondary: _buildIconContainer(
+                          settings.useLocalBackend
+                              ? Icons.computer
+                              : Icons.cloud,
+                          Colors.blue,
                         ),
                       ),
-                      const Divider(),
+                      const Divider(height: 1),
                       ListTile(
-                        leading: const Icon(Icons.info_outline, size: 20),
+                        leading: const Icon(Icons.link, size: 20),
                         title: const Text(
-                          'Current Backend',
-                          style: TextStyle(fontSize: 14),
+                          'Backend URL',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                         subtitle: Text(
                           settings.getBackendUrl(),
@@ -130,6 +260,19 @@ class SettingsScreen extends StatelessWidget {
                             fontSize: 12,
                             fontFamily: 'monospace',
                           ),
+                        ),
+                        trailing: IconButton(
+                          icon: const Icon(Icons.copy, size: 18),
+                          tooltip: 'Copy URL',
+                          onPressed: () {
+                            // Copy to clipboard functionality
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('URL copied to clipboard'),
+                                duration: Duration(seconds: 2),
+                              ),
+                            );
+                          },
                         ),
                       ),
                     ],
@@ -140,25 +283,141 @@ class SettingsScreen extends StatelessWidget {
           ],
 
           const SizedBox(height: 24),
-          _buildSectionHeader('About'),
+
+          // Storage Section
+          _buildSectionHeader('Storage', Icons.storage_outlined),
           Card(
+            elevation: 2,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             child: Column(
               children: [
                 ListTile(
-                  leading: const Icon(Icons.info_outline),
-                  title: const Text('Version'),
-                  trailing: const Text('1.0.0'),
-                ),
-                const Divider(),
-                ListTile(
-                  leading: const Icon(Icons.privacy_tip_outlined),
-                  title: const Text('Privacy Policy'),
-                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                  onTap: () {
-                    // Navigate to privacy
-                  },
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  leading: _buildIconContainer(
+                    Icons.delete_sweep,
+                    AppColors.error,
+                  ),
+                  title: const Text('Clear History', style: TextStyle(fontWeight: FontWeight.w600)),
+                  subtitle: const Text('Remove all download history'),
+                  trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: AppColors.textHint),
+                  onTap: _clearHistory,
                 ),
               ],
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
+          // About Section
+          _buildSectionHeader('About', Icons.info_outline),
+          Card(
+            elevation: 2,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            child: Column(
+              children: [
+                ListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  leading: _buildIconContainer(Icons.info, AppColors.info),
+                  title: const Text('Version', style: TextStyle(fontWeight: FontWeight.w600)),
+                  trailing: Text(
+                    '$_version ($_buildNumber)',
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+                const Divider(height: 1, indent: 16, endIndent: 16),
+                ListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  leading: _buildIconContainer(
+                    Icons.privacy_tip,
+                    AppColors.warning,
+                  ),
+                  title: const Text('Privacy Policy', style: TextStyle(fontWeight: FontWeight.w600)),
+                  trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: AppColors.textHint),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const PrivacyScreen(),
+                      ),
+                    );
+                  },
+                ),
+                const Divider(height: 1, indent: 16, endIndent: 16),
+                ListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  leading: _buildIconContainer(Icons.code, AppColors.secondary),
+                  title: const Text('GitHub Repository', style: TextStyle(fontWeight: FontWeight.w600)),
+                  subtitle: const Text('View source code'),
+                  trailing: const Icon(Icons.open_in_new, size: 16, color: AppColors.textHint),
+                  onTap: () => _launchURL('https://github.com'),
+                ),
+                const Divider(height: 1, indent: 16, endIndent: 16),
+                ListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  leading: _buildIconContainer(
+                    Icons.bug_report,
+                    AppColors.accent,
+                  ),
+                  title: const Text('Report an Issue', style: TextStyle(fontWeight: FontWeight.w600)),
+                  subtitle: const Text('Help us improve URLens'),
+                  trailing: const Icon(Icons.open_in_new, size: 16, color: AppColors.textHint),
+                  onTap: () => _launchURL('https://github.com/issues'),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
+          // Footer
+          Center(
+            child: Column(
+              children: [
+                Text(
+                  'Made with ❤️ by URLens Team',
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 14,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  '© ${DateTime.now().year} URLens. All rights reserved.',
+                  style: TextStyle(color: AppColors.textHint, fontSize: 12),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 32),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSectionHeader(String title, IconData icon) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 4, bottom: 8, top: 16),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, size: 20, color: AppColors.primary),
+          ),
+          const SizedBox(width: 12),
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
+              letterSpacing: 0.5,
             ),
           ),
         ],
@@ -166,15 +425,198 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSectionHeader(String title) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 4, bottom: 8),
-      child: Text(
-        title,
-        style: const TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.bold,
-          color: AppColors.textSecondary,
+  Widget _buildIconContainer(IconData icon, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Icon(icon, color: color, size: 24),
+    );
+  }
+
+  Widget _buildAppearanceCard() {
+    return Consumer<SettingsProvider>(
+      builder: (context, settings, child) {
+        return Card(
+          elevation: 2,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          child: Column(
+            children: [
+              ListTile(
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                leading: _buildIconContainer(
+                  Icons.brightness_6,
+                  AppColors.secondary,
+                ),
+                title: const Text('Theme Mode', style: TextStyle(fontWeight: FontWeight.w600)),
+                subtitle: Text(
+                  settings.themeMode == ThemeMode.dark
+                      ? 'Dark'
+                      : settings.themeMode == ThemeMode.light
+                      ? 'Light'
+                      : 'System Default',
+                ),
+                trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: AppColors.textHint),
+                onTap: () => _showThemeDialog(context, settings),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildDownloadCard() {
+    return Consumer<SettingsProvider>(
+      builder: (context, settings, child) {
+        return Card(
+          elevation: 2,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          child: Column(
+            children: [
+              ListTile(
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                leading: _buildIconContainer(
+                  Icons.video_library,
+                  AppColors.primary,
+                ),
+                title: const Text('Default Quality', style: TextStyle(fontWeight: FontWeight.w600)),
+                subtitle: Text(settings.defaultQuality),
+                trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: AppColors.textHint),
+                onTap: () => _showQualityDialog(context, settings),
+              ),
+              const Divider(height: 1, indent: 16, endIndent: 16),
+              SwitchListTile(
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                title: const Text('Auto-merge Audio & Video', style: TextStyle(fontWeight: FontWeight.w600)),
+                subtitle: const Text('Automatically merge separate streams'),
+                value: settings.autoMergeStreams,
+                activeColor: AppColors.primary,
+                onChanged: (value) {
+                  settings.setAutoMergeStreams(value);
+                },
+                secondary: _buildIconContainer(
+                  Icons.merge_type,
+                  AppColors.success,
+                ),
+              ),
+              const Divider(height: 1, indent: 16, endIndent: 16),
+              ListTile(
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                leading: _buildIconContainer(Icons.folder, AppColors.warning),
+                title: const Text('Download Location', style: TextStyle(fontWeight: FontWeight.w600)),
+                subtitle: Text(settings.downloadPath),
+                trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: AppColors.textHint),
+                onTap: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Download location: ${settings.downloadPath}'),
+                      duration: const Duration(seconds: 2),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _showThemeDialog(BuildContext context, SettingsProvider settings) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Choose Theme'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              title: const Text('Light'),
+              leading: Radio<ThemeMode>(
+                value: ThemeMode.light,
+                groupValue: settings.themeMode,
+                onChanged: (value) {
+                  if (value != null) {
+                    settings.setThemeMode(value);
+                    Navigator.pop(context);
+                  }
+                },
+              ),
+              onTap: () {
+                settings.setThemeMode(ThemeMode.light);
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              title: const Text('Dark'),
+              leading: Radio<ThemeMode>(
+                value: ThemeMode.dark,
+                groupValue: settings.themeMode,
+                onChanged: (value) {
+                  if (value != null) {
+                    settings.setThemeMode(value);
+                    Navigator.pop(context);
+                  }
+                },
+              ),
+              onTap: () {
+                settings.setThemeMode(ThemeMode.dark);
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              title: const Text('System Default'),
+              leading: Radio<ThemeMode>(
+                value: ThemeMode.system,
+                groupValue: settings.themeMode,
+                onChanged: (value) {
+                  if (value != null) {
+                    settings.setThemeMode(value);
+                    Navigator.pop(context);
+                  }
+                },
+              ),
+              onTap: () {
+                settings.setThemeMode(ThemeMode.system);
+                Navigator.pop(context);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showQualityDialog(BuildContext context, SettingsProvider settings) {
+    final qualities = ['Best Available', '1080p', '720p', '480p', '360p'];
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Default Quality'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: qualities.map((quality) {
+            return ListTile(
+              title: Text(quality),
+              leading: Radio<String>(
+                value: quality,
+                groupValue: settings.defaultQuality,
+                onChanged: (value) {
+                  if (value != null) {
+                    settings.setDefaultQuality(value);
+                    Navigator.pop(context);
+                  }
+                },
+              ),
+              onTap: () {
+                settings.setDefaultQuality(quality);
+                Navigator.pop(context);
+              },
+            );
+          }).toList(),
         ),
       ),
     );

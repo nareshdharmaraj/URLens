@@ -1,5 +1,6 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:open_file/open_file.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
@@ -40,6 +41,15 @@ class NotificationService {
     required int progress,
     required int maxProgress,
   }) async {
+    // Check if notifications are enabled
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final enabled = prefs.getBool('notifications_enabled') ?? true;
+      if (!enabled) return;
+    } catch (e) {
+      // Ignore errors and show notification
+    }
+
     final androidDetails = AndroidNotificationDetails(
       'download_channel',
       'Downloads',
@@ -63,6 +73,15 @@ class NotificationService {
     required String body,
     String? filePath,
   }) async {
+    // Check if notifications are enabled
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final enabled = prefs.getBool('notifications_enabled') ?? true;
+      if (!enabled) return;
+    } catch (e) {
+      // Ignore
+    }
+
     final androidDetails = const AndroidNotificationDetails(
       'download_channel',
       'Downloads',
@@ -85,12 +104,22 @@ class NotificationService {
   Future<void> cancelNotification(int id) async {
     await _notificationsPlugin.cancel(id);
   }
+
   Future<void> showNotification({
     required int id,
     required String title,
     required String body,
     String? payload,
   }) async {
+    // Check if notifications are enabled
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final enabled = prefs.getBool('notifications_enabled') ?? true;
+      if (!enabled) return;
+    } catch (e) {
+      // Ignore
+    }
+
     const androidDetails = AndroidNotificationDetails(
       'status_channel',
       'Status',
