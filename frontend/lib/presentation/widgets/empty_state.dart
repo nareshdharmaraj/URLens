@@ -20,7 +20,8 @@ class EmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: SingleChildScrollView( // Prevent overflow on small screens
+      child: SingleChildScrollView(
+        // Prevent overflow on small screens
         padding: const EdgeInsets.all(32.0),
         child: FadeInUp(
           duration: const Duration(milliseconds: 600),
@@ -34,13 +35,17 @@ class EmptyState extends StatelessWidget {
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: Colors.black.withValues(alpha: 0.05),
                       blurRadius: 20,
                       offset: const Offset(0, 10),
                     ),
                   ],
                 ),
-                child: Icon(icon, size: 64, color: AppColors.primary.withOpacity(0.8)),
+                child: Icon(
+                  icon,
+                  size: 64,
+                  color: AppColors.primary.withValues(alpha: 0.8),
+                ),
               ),
               const SizedBox(height: 32),
               Text(

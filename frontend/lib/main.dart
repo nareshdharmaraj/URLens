@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:provider/provider.dart';
-import 'dart:io';
+import 'dart:io' show Platform;
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'core/config/app_config.dart';
 import 'core/theme/app_theme.dart';
@@ -17,8 +18,8 @@ import 'routes/app_router.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize SQLite for desktop platforms
-  if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+  // Initialize SQLite for desktop platforms (not web)
+  if (!kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
   }
@@ -28,7 +29,10 @@ void main() async {
   await NotificationService().initialize();
 
   // Initialize database - ensures database is ready before app starts
-  await DatabaseHelper.instance.database;
+  // Skip database initialization on web as sqflite doesn't support web
+  if (!kIsWeb) {
+    await DatabaseHelper.instance.database;
+  }
 
   runApp(const URLensApp());
 }

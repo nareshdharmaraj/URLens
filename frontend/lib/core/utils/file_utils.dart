@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
 import '../constants/storage_constants.dart';
@@ -7,6 +8,9 @@ import '../constants/storage_constants.dart';
 class FileUtils {
   /// Get downloads directory based on platform
   static Future<Directory> getDownloadsDirectory() async {
+    if (kIsWeb) {
+      throw UnsupportedError('File downloads are not supported on web');
+    }
     if (Platform.isAndroid) {
       // Android: use external storage directory for gallery visibility
       // This ensures files appear in the device gallery

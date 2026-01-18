@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:open_file/open_file.dart';
@@ -27,23 +28,20 @@ class HistoryListItem extends StatelessWidget {
 
   Future<void> _openFile(BuildContext context) async {
     final filePath = record.localFilePath;
-    
+
     if (FileUtils.isVideo(filePath)) {
-       Navigator.push(
+      Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) => VideoPlayerScreen(
-            filePath: filePath,
-            title: record.title,
-          ),
+          builder: (_) =>
+              VideoPlayerScreen(filePath: filePath, title: record.title),
         ),
       );
       return;
-    } 
-    
-    
+    }
+
     if (FileUtils.isAudio(filePath)) {
-       Navigator.push(
+      Navigator.push(
         context,
         MaterialPageRoute(
           builder: (_) => AudioPlayerScreen(
@@ -61,10 +59,8 @@ class HistoryListItem extends StatelessWidget {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) => ImageViewerScreen(
-            filePath: filePath,
-            title: record.title,
-          ),
+          builder: (_) =>
+              ImageViewerScreen(filePath: filePath, title: record.title),
         ),
       );
       return;
@@ -73,11 +69,11 @@ class HistoryListItem extends StatelessWidget {
     try {
       final result = await OpenFile.open(filePath);
       if (result.type != ResultType.done) {
-         if (context.mounted) {
-           ScaffoldMessenger.of(context).showSnackBar(
-             SnackBar(content: Text('Could not open file: ${result.message}')),
-           );
-         }
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Could not open file: ${result.message}')),
+          );
+        }
       }
     } catch (e) {
       if (context.mounted) {
@@ -90,11 +86,12 @@ class HistoryListItem extends StatelessWidget {
 
   Future<void> _shareFile(BuildContext context) async {
     try {
-      if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
-         // Share plus might check file existence, but let's be safe
-         await Share.shareXFiles([XFile(record.localFilePath)]);
+      if (!kIsWeb &&
+          (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
+        // Share plus might check file existence, but let's be safe
+        await Share.shareXFiles([XFile(record.localFilePath)]);
       } else {
-         await Share.shareXFiles([XFile(record.localFilePath)]);
+        await Share.shareXFiles([XFile(record.localFilePath)]);
       }
     } catch (e) {
       if (context.mounted) {
@@ -107,6 +104,12 @@ class HistoryListItem extends StatelessWidget {
 
   Future<void> _locateFile(BuildContext context) async {
     try {
+      if (kIsWeb) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('File location not available on web')),
+        );
+        return;
+      }
       if (Platform.isWindows) {
         await Process.run('explorer.exe', ['/select,${record.localFilePath}']);
       } else if (Platform.isMacOS) {
@@ -126,7 +129,8 @@ class HistoryListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = Platform.isWindows || Platform.isMacOS || Platform.isLinux;
+    final isDesktop =
+        !kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux);
 
     return Card(
       child: InkWell(

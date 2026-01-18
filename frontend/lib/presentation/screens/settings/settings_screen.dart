@@ -1,3 +1,4 @@
+// ignore_for_file: deprecated_member_use
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -126,17 +127,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
             builder: (context, settings, child) {
               return Card(
                 elevation: 2,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
                 child: Column(
                   children: [
                     SwitchListTile(
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      title: const Text('Download Notifications', style: TextStyle(fontWeight: FontWeight.w600)),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      title: const Text(
+                        'Download Notifications',
+                        style: TextStyle(fontWeight: FontWeight.w600),
+                      ),
                       subtitle: const Text(
                         'Get notified when downloads complete',
                       ),
                       value: settings.notificationsEnabled,
-                      activeColor: AppColors.primary,
+                      activeTrackColor: AppColors.primary,
                       onChanged: (value) {
                         settings.toggleNotifications(value);
                         ScaffoldMessenger.of(context).showSnackBar(
@@ -169,7 +178,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
               builder: (context, settings, child) {
                 return Card(
                   elevation: 2,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
                   color: Colors.blue.shade50,
                   child: Column(
                     children: [
@@ -196,7 +207,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                       const Divider(height: 1),
                       SwitchListTile(
-                        title: const Text('Use Local Backend', style: TextStyle(fontWeight: FontWeight.w600)),
+                        title: const Text(
+                          'Use Local Backend',
+                          style: TextStyle(fontWeight: FontWeight.w600),
+                        ),
                         subtitle: Text(
                           settings.useLocalBackend
                               ? '🟢 localhost:8000'
@@ -288,18 +302,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _buildSectionHeader('Storage', Icons.storage_outlined),
           Card(
             elevation: 2,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
             child: Column(
               children: [
                 ListTile(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
                   leading: _buildIconContainer(
                     Icons.delete_sweep,
                     AppColors.error,
                   ),
-                  title: const Text('Clear History', style: TextStyle(fontWeight: FontWeight.w600)),
+                  title: const Text(
+                    'Clear History',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
                   subtitle: const Text('Remove all download history'),
-                  trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: AppColors.textHint),
+                  trailing: const Icon(
+                    Icons.arrow_forward_ios,
+                    size: 16,
+                    color: AppColors.textHint,
+                  ),
                   onTap: _clearHistory,
                 ),
               ],
@@ -312,13 +338,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _buildSectionHeader('About', Icons.info_outline),
           Card(
             elevation: 2,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
             child: Column(
               children: [
                 ListTile(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
                   leading: _buildIconContainer(Icons.info, AppColors.info),
-                  title: const Text('Version', style: TextStyle(fontWeight: FontWeight.w600)),
+                  title: const Text(
+                    'Version',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
                   trailing: Text(
                     '$_version ($_buildNumber)',
                     style: const TextStyle(
@@ -329,13 +363,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 const Divider(height: 1, indent: 16, endIndent: 16),
                 ListTile(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
                   leading: _buildIconContainer(
                     Icons.privacy_tip,
                     AppColors.warning,
                   ),
-                  title: const Text('Privacy Policy', style: TextStyle(fontWeight: FontWeight.w600)),
-                  trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: AppColors.textHint),
+                  title: const Text(
+                    'Privacy Policy',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  trailing: const Icon(
+                    Icons.arrow_forward_ios,
+                    size: 16,
+                    color: AppColors.textHint,
+                  ),
                   onTap: () {
                     Navigator.push(
                       context,
@@ -347,23 +391,43 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 const Divider(height: 1, indent: 16, endIndent: 16),
                 ListTile(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
                   leading: _buildIconContainer(Icons.code, AppColors.secondary),
-                  title: const Text('GitHub Repository', style: TextStyle(fontWeight: FontWeight.w600)),
+                  title: const Text(
+                    'GitHub Repository',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
                   subtitle: const Text('View source code'),
-                  trailing: const Icon(Icons.open_in_new, size: 16, color: AppColors.textHint),
+                  trailing: const Icon(
+                    Icons.open_in_new,
+                    size: 16,
+                    color: AppColors.textHint,
+                  ),
                   onTap: () => _launchURL('https://github.com'),
                 ),
                 const Divider(height: 1, indent: 16, endIndent: 16),
                 ListTile(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
                   leading: _buildIconContainer(
                     Icons.bug_report,
                     AppColors.accent,
                   ),
-                  title: const Text('Report an Issue', style: TextStyle(fontWeight: FontWeight.w600)),
+                  title: const Text(
+                    'Report an Issue',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
                   subtitle: const Text('Help us improve URLens'),
-                  trailing: const Icon(Icons.open_in_new, size: 16, color: AppColors.textHint),
+                  trailing: const Icon(
+                    Icons.open_in_new,
+                    size: 16,
+                    color: AppColors.textHint,
+                  ),
                   onTap: () => _launchURL('https://github.com/issues'),
                 ),
               ],
@@ -405,7 +469,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.1),
+              color: AppColors.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(icon, size: 20, color: AppColors.primary),
@@ -429,7 +493,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Icon(icon, color: color, size: 24),
@@ -441,16 +505,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
       builder: (context, settings, child) {
         return Card(
           elevation: 2,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           child: Column(
             children: [
               ListTile(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 leading: _buildIconContainer(
                   Icons.brightness_6,
                   AppColors.secondary,
                 ),
-                title: const Text('Theme Mode', style: TextStyle(fontWeight: FontWeight.w600)),
+                title: const Text(
+                  'Theme Mode',
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
                 subtitle: Text(
                   settings.themeMode == ThemeMode.dark
                       ? 'Dark'
@@ -458,7 +530,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ? 'Light'
                       : 'System Default',
                 ),
-                trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: AppColors.textHint),
+                trailing: const Icon(
+                  Icons.arrow_forward_ios,
+                  size: 16,
+                  color: AppColors.textHint,
+                ),
                 onTap: () => _showThemeDialog(context, settings),
               ),
             ],
@@ -473,27 +549,45 @@ class _SettingsScreenState extends State<SettingsScreen> {
       builder: (context, settings, child) {
         return Card(
           elevation: 2,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           child: Column(
             children: [
               ListTile(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 leading: _buildIconContainer(
                   Icons.video_library,
                   AppColors.primary,
                 ),
-                title: const Text('Default Quality', style: TextStyle(fontWeight: FontWeight.w600)),
+                title: const Text(
+                  'Default Quality',
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
                 subtitle: Text(settings.defaultQuality),
-                trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: AppColors.textHint),
+                trailing: const Icon(
+                  Icons.arrow_forward_ios,
+                  size: 16,
+                  color: AppColors.textHint,
+                ),
                 onTap: () => _showQualityDialog(context, settings),
               ),
               const Divider(height: 1, indent: 16, endIndent: 16),
               SwitchListTile(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                title: const Text('Auto-merge Audio & Video', style: TextStyle(fontWeight: FontWeight.w600)),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                title: const Text(
+                  'Auto-merge Audio & Video',
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
                 subtitle: const Text('Automatically merge separate streams'),
                 value: settings.autoMergeStreams,
-                activeColor: AppColors.primary,
+                activeTrackColor: AppColors.primary,
                 onChanged: (value) {
                   settings.setAutoMergeStreams(value);
                 },
@@ -504,15 +598,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               const Divider(height: 1, indent: 16, endIndent: 16),
               ListTile(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 leading: _buildIconContainer(Icons.folder, AppColors.warning),
-                title: const Text('Download Location', style: TextStyle(fontWeight: FontWeight.w600)),
+                title: const Text(
+                  'Download Location',
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
                 subtitle: Text(settings.downloadPath),
-                trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: AppColors.textHint),
+                trailing: const Icon(
+                  Icons.arrow_forward_ios,
+                  size: 16,
+                  color: AppColors.textHint,
+                ),
                 onTap: () {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('Download location: ${settings.downloadPath}'),
+                      content: Text(
+                        'Download location: ${settings.downloadPath}',
+                      ),
                       duration: const Duration(seconds: 2),
                     ),
                   );
@@ -533,55 +639,37 @@ class _SettingsScreenState extends State<SettingsScreen> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            ListTile(
+            RadioListTile<ThemeMode>(
               title: const Text('Light'),
-              leading: Radio<ThemeMode>(
-                value: ThemeMode.light,
-                groupValue: settings.themeMode,
-                onChanged: (value) {
-                  if (value != null) {
-                    settings.setThemeMode(value);
-                    Navigator.pop(context);
-                  }
-                },
-              ),
-              onTap: () {
-                settings.setThemeMode(ThemeMode.light);
-                Navigator.pop(context);
+              value: ThemeMode.light,
+              groupValue: settings.themeMode,
+              onChanged: (ThemeMode? value) {
+                if (value != null) {
+                  settings.setThemeMode(value);
+                  Navigator.pop(context);
+                }
               },
             ),
-            ListTile(
+            RadioListTile<ThemeMode>(
               title: const Text('Dark'),
-              leading: Radio<ThemeMode>(
-                value: ThemeMode.dark,
-                groupValue: settings.themeMode,
-                onChanged: (value) {
-                  if (value != null) {
-                    settings.setThemeMode(value);
-                    Navigator.pop(context);
-                  }
-                },
-              ),
-              onTap: () {
-                settings.setThemeMode(ThemeMode.dark);
-                Navigator.pop(context);
+              value: ThemeMode.dark,
+              groupValue: settings.themeMode,
+              onChanged: (ThemeMode? value) {
+                if (value != null) {
+                  settings.setThemeMode(value);
+                  Navigator.pop(context);
+                }
               },
             ),
-            ListTile(
+            RadioListTile<ThemeMode>(
               title: const Text('System Default'),
-              leading: Radio<ThemeMode>(
-                value: ThemeMode.system,
-                groupValue: settings.themeMode,
-                onChanged: (value) {
-                  if (value != null) {
-                    settings.setThemeMode(value);
-                    Navigator.pop(context);
-                  }
-                },
-              ),
-              onTap: () {
-                settings.setThemeMode(ThemeMode.system);
-                Navigator.pop(context);
+              value: ThemeMode.system,
+              groupValue: settings.themeMode,
+              onChanged: (ThemeMode? value) {
+                if (value != null) {
+                  settings.setThemeMode(value);
+                  Navigator.pop(context);
+                }
               },
             ),
           ],
@@ -599,21 +687,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: qualities.map((quality) {
-            return ListTile(
+            return RadioListTile<String>(
               title: Text(quality),
-              leading: Radio<String>(
-                value: quality,
-                groupValue: settings.defaultQuality,
-                onChanged: (value) {
-                  if (value != null) {
-                    settings.setDefaultQuality(value);
-                    Navigator.pop(context);
-                  }
-                },
-              ),
-              onTap: () {
-                settings.setDefaultQuality(quality);
-                Navigator.pop(context);
+              value: quality,
+              groupValue: settings.defaultQuality,
+              onChanged: (String? value) {
+                if (value != null) {
+                  settings.setDefaultQuality(value);
+                  Navigator.pop(context);
+                }
               },
             );
           }).toList(),

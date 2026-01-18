@@ -1,4 +1,5 @@
 import 'package:sqflite/sqflite.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:path/path.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../models/download_record.dart';
@@ -11,6 +12,9 @@ class DatabaseHelper {
   DatabaseHelper._init();
 
   Future<Database> get database async {
+    if (kIsWeb) {
+      throw UnsupportedError('Database is not supported on web');
+    }
     if (_database != null) return _database!;
     _database = await _initDB();
     return _database!;

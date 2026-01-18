@@ -1,11 +1,13 @@
 import 'package:permission_handler/permission_handler.dart';
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:io';
 
 /// Permission utility functions
 class PermissionUtils {
   /// Request storage permission
   static Future<bool> requestStoragePermission() async {
+    if (kIsWeb) return true; // Web doesn't need storage permissions
     if (Platform.isAndroid) {
       // For Android 13+ (API 33+), we need specific permissions
       if (await _isAndroid13OrHigher()) {

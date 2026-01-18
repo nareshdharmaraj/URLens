@@ -5,6 +5,7 @@ import 'package:path/path.dart' as path;
 import 'package:universal_html/html.dart' as html;
 import 'package:gal/gal.dart';
 import '../../../core/utils/file_utils.dart';
+import '../../../core/utils/file_utils.dart';
 import '../../../core/constants/api_constants.dart';
 
 /// File manager for download operations
@@ -96,7 +97,7 @@ class FileManager {
         );
 
         // Save to device gallery for mobile platforms
-        if (Platform.isAndroid || Platform.isIOS) {
+        if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
           try {
             // Use gal to save file to gallery
             await Gal.putVideo(filePath);
